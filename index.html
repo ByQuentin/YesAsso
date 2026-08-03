@@ -648,7 +648,7 @@ function loadEvents() {
           if (agendaList) agendaList.innerHTML = htmlContent;
         });
     }
-    
+
 async function submitEvent() {
       const title = document.getElementById('event-title-input').value.trim();
       const location = document.getElementById('event-location-input').value.trim();
@@ -778,11 +778,21 @@ async function kickMember(memberUid, memberName) {
 
     // Exemple à intégrer dans ta boucle d'affichage des membres :
 const isCurrentUserPresident = (currentUserData && currentUserData.role === 'Président');
-const isSelf = (doc.id === getAuth().currentUser.uid);
+const isSelf = (change.id === getAuth().currentUser.uid);
 let kickButtonHtml = '';
 if (isCurrentUserPresident && !isSelf) {
   kickButtonHtml = `<button onclick="kickMember('${member.uid}', '${member.name}')" style="background:var(--danger, #ff4d4d); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">Virer</button>`;
 }
+function openEventModal() {
+      // Cherche automatiquement un modal qui contient "event" ou "agenda" dans son ID ou sa classe
+      const modal = document.querySelector('[id*="event"], [id*="agenda"], [class*="modal"]');
+      if (modal) {
+        modal.style.display = 'block';
+      } else {
+        console.warn("Aucun modal trouvé pour l'agenda");
+      }
+    }
+
   </script>
 </body>
 </html>
