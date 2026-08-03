@@ -179,7 +179,7 @@
     <div id="toast" class="toast">Notification</div>
 
     <!-- 1. ÉCRAN AUTHENTIFICATION -->
-    <div id="screen-auth" class="screen active auth-screen">
+    <div id="screen-auth" class="screen auth-screen">
       <div class="asso-icon">👥</div>
       <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">YesAsso</h1>
       <p style="color: var(--muted); font-size: 14px; margin-bottom: 24px; text-align: center;">Gestion collaborative simplifiée</p>
@@ -680,38 +680,47 @@
         showToast('Erreur lors de la déconnexion');
       }
     }
-    // Observer Firebase pour garder la session active au rechargement (F5)
-    firebase.auth().onAuthStateChanged(async (user) => {
-      if (user) {
-        // L'utilisateur est connecté, on récupère ses données d'association
-        const uid = user.uid;
-        try {
-          const snapshot = await getDb().collectionGroup('members').get();
-          let foundAsso = null, foundMemberData = null;
 
-          snapshot.forEach(doc => {
-            if (doc.id === uid) {
-              foundMemberData = doc.data();
-              foundAsso = doc.ref.parent.parent;
+    // --- GESTION DE LA PERSISTANCE DE SESSION AU CHARGEMENT (F5) ---
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .then(() => {
+        firebase.auth().onAuthStateChanged(async (user) => {
+          if (user) {
+            const uid = user.uid;
+            try {
+              const snapshot = await getDb().collectionGroup('members').get();
+              let foundAsso = null, foundMemberData = null;
+
+              snapshot.forEach(doc => {
+                if (doc.id === uid) {
+                  foundMemberData = doc.data();
+                  foundAsso = doc.ref.parent.parent;
+                }
+              });
+
+              if (foundAsso) {
+                currentAssoId = foundAsso.id;
+                const assoDoc = await foundAsso.get();
+                currentInviteCode = assoDoc.data().inviteCode;
+                currentUserData = foundMemberData;
+
+                setupHomeScreen();
+              } else {
+                showScreen('auth');
+              }
+            } catch (e) {
+              console.error("Erreur de restauration de session :", e);
+              showScreen('auth');
             }
-          });
-
-          if (foundAsso) {
-            currentAssoId = foundAsso.id;
-            const assoDoc = await foundAsso.get();
-            currentInviteCode = assoDoc.data().inviteCode;
-            currentUserData = foundMemberData;
-
-            setupHomeScreen();
+          } else {
+            showScreen('auth');
           }
-        } catch (e) {
-          console.error("Erreur de restauration de session :", e);
-        }
-      } else {
-        // Aucun utilisateur connecté, on affiche l'écran d'auth
+        });
+      })
+      .catch((error) => {
+        console.error("Erreur de configuration de la persistance :", error);
         showScreen('auth');
-      }
-    });
+      });
   </script>
 </body>
 </html>
