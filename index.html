@@ -571,12 +571,20 @@ async function handleJoin() {
       });
     }
 
-    function setupHomeScreen() {
+function setupHomeScreen() {
       document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
       document.getElementById('role-display').textContent = currentUserData.role;
       document.getElementById('code-display').textContent = 'Code: ' + currentInviteCode;
 
       document.getElementById('btn-admin-module').style.display = (currentUserData.role === 'Président') ? 'flex' : 'none';
+
+      // Masquer ou afficher les boutons "+" d'ajout d'événement selon le rôle
+      const userRole = currentUserData ? currentUserData.role : '';
+      const canManageEvents = ['Président', 'Trésorier', 'Secrétaire'].includes(userRole);
+      
+      document.querySelectorAll('.add-btn').forEach(btn => {
+        btn.style.display = canManageEvents ? 'flex' : 'none';
+      });
 
       loadAssociationInfo();
       loadEvents();
@@ -731,40 +739,46 @@ function loadEvents() {
     }
 
 async function submitEvent() {
-  const title = document.getElementById('event-title-input').value.trim();
-  const location = document.getElementById('event-location-input').value.trim();
-  const dateValue = document.getElementById('event-date-input').value;
+      const userRole = currentUserData ? currentUserData.role : '';
+      if (!['Président', 'Trésorier', 'Secrétaire'].includes(userRole)) {
+        showToast('Action réservée au bureau (Président, Trésorier, Secrétaire)');
+        return;
+      }
 
-  if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
+      const title = document.getElementById('event-title-input').value.trim();
+      const location = document.getElementById('event-location-input').value.trim();
+      const dateValue = document.getElementById('event-date-input').value;
 
-  const localDate = new Date(dateValue);
-  const now = new Date();
+      if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
 
-  // Avertissement ou blocage si la date est passée
-  if (localDate < now) {
-    if (!confirm("Attention, la date choisie est déjà passée. Veux-tu vraiment l'ajouter quand même ?")) {
-      return; // L'utilisateur annule
+      const localDate = new Date(dateValue);
+      const now = new Date();
+
+      if (localDate < now) {
+        if (!confirm("Attention, la date choisie est déjà passée. Veux-tu vraiment l'ajouter quand même ?")) {
+          return;
+        }
+      }
+
+      try {
+        await getDb().collection('associations').doc(currentAssoId).collection('events').add({
+          title: title,
+          location: location || 'Non spécifié',
+          date: firebase.firestore.Timestamp.fromDate(localDate),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        closeEventModal();
+        document.getElementById('event-title-input').value = '';
+        document.getElementById('event-location-input').value = '';
+        document.getElementById('event-date-input').value = '';
+        showToast('Événement ajouté avec succès !');
+      } catch (e) {
+        console.error("Erreur ajout événement :", e);
+        showToast('Erreur d\'ajout d\'événement');
+      }
     }
-  }
-
-  try {
-    await getDb().collection('associations').doc(currentAssoId).collection('events').add({
-      title: title,
-      location: location || 'Non spécifié',
-      date: firebase.firestore.Timestamp.fromDate(localDate),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    closeEventModal();
-    document.getElementById('event-title-input').value = '';
-    document.getElementById('event-location-input').value = '';
-    document.getElementById('event-date-input').value = '';
-    showToast('Événement ajouté avec succès !');
-  } catch (e) {
-    console.error("Erreur ajout événement :", e);
-    showToast('Erreur d\'ajout d\'événement');
-  }
-}
+    
     async function deleteEvent(eventId, eventTitle) {
       if (!confirm(`Supprimer l'événement "${eventTitle}" ?`)) return;
 
