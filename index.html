@@ -789,8 +789,7 @@ async function kickMember(memberUid, memberName) {
 
     // Exemple à intégrer dans ta boucle d'affichage des membres :
 const isCurrentUserPresident = (currentUserData && currentUserData.role === 'Président');
-const isSelf = (member.uid === getAuth().currentUser.uid);
-
+const isSelf = (doc.id === getAuth().currentUser.uid);
 let kickButtonHtml = '';
 if (isCurrentUserPresident && !isSelf) {
   kickButtonHtml = `<button onclick="kickMember('${member.uid}', '${member.name}')" style="background:var(--danger, #ff4d4d); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">Virer</button>`;
