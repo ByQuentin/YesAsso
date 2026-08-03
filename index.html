@@ -649,7 +649,7 @@ function loadEvents() {
     function openEventModal() { document.getElementById('modal-event').classList.add('active'); }
     function closeEventModal() { document.getElementById('modal-event').classList.remove('active'); }
 
-    async function submitEvent() {
+async function submitEvent() {
       const title = document.getElementById('event-title-input').value.trim();
       const location = document.getElementById('event-location-input').value.trim();
       const dateValue = document.getElementById('event-date-input').value;
@@ -657,7 +657,7 @@ function loadEvents() {
       if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
 
       try {
-        // Transformation propre de la date locale en objet Date JS puis en Timestamp Firestore
+        // Transformation de la date locale en objet Date JS puis en Timestamp Firestore
         const localDate = new Date(dateValue);
 
         await getDb().collection('associations').doc(currentAssoId).collection('events').add({
