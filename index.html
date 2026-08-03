@@ -432,14 +432,22 @@
     let currentUserData = null;
     let currentInviteCode = null;
 
-    function switchTab(type) {
-      document.getElementById('tab-login').classList.toggle('active', type === 'login');
-      document.getElementById('tab-join').classList.toggle('active', type === 'join');
-      document.getElementById('tab-create').classList.toggle('active', type === 'create');
+function switchWelcomeTab(type) {
+      // Masquer les 3 gros boutons d'accueil
+      document.getElementById('welcome-tabs-container').style.display = 'none';
+      // Afficher le conteneur du formulaire
+      document.getElementById('welcome-form-container').style.display = 'block';
 
-      document.getElementById('form-login').style.display = type === 'login' ? 'block' : 'none';
-      document.getElementById('form-join').style.display = type === 'join' ? 'block' : 'none';
-      document.getElementById('form-create').style.display = type === 'create' ? 'block' : 'none';
+      // Afficher uniquement le formulaire correspondant au choix
+      document.getElementById('form-login').style.display = (type === 'login') ? 'block' : 'none';
+      document.getElementById('form-join').style.display = (type === 'join') ? 'block' : 'none';
+      document.getElementById('form-create').style.display = (type === 'create') ? 'block' : 'none';
+    }
+
+    function backToWelcomeTabs() {
+      // Masquer le formulaire et réafficher les 3 gros boutons
+      document.getElementById('welcome-form-container').style.display = 'none';
+      document.getElementById('welcome-tabs-container').style.display = 'flex';
     }
 
     function showScreen(name) {
