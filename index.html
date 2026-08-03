@@ -432,7 +432,7 @@
     let currentUserData = null;
     let currentInviteCode = null;
 
-function switchWelcomeTab(type) {
+    function switchWelcomeTab(type) {
       // 1. On cache les 3 gros boutons d'accueil
       document.getElementById('welcome-tabs-container').style.display = 'none';
       
@@ -511,49 +511,45 @@ function switchWelcomeTab(type) {
       }
     }
 
-async function handleJoin() {
-  const code = document.getElementById('join-code').value.trim().toUpperCase();
-  const prenom = document.getElementById('join-prenom').value.trim();
-  const email = document.getElementById('join-email').value.trim();
-  const mdp = document.getElementById('join-mdp').value.trim();
+    async function handleJoin() {
+      const code = document.getElementById('join-code').value.trim().toUpperCase();
+      const prenom = document.getElementById('join-prenom').value.trim();
+      const email = document.getElementById('join-email').value.trim();
+      const mdp = document.getElementById('join-mdp').value.trim();
 
-  if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
+      if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
 
-  try {
-    // 1. On crée le compte utilisateur EN PREMIER pour être authentifié auprès de Firebase
-    const userCred = await getAuth().createUserWithEmailAndPassword(email, mdp);
-    const uid = userCred.user.uid;
+      try {
+        const userCred = await getAuth().createUserWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
 
-    // 2. Maintenant qu'on est identifié, on peut interroger la base de données
-    const snapshot = await getDb().collection('associations').where('inviteCode', '==', code).get();
-    
-    if (snapshot.empty) { 
-      // Si le code est invalide, on supprime le compte fraîchement créé pour ne pas polluer ton Firebase
-      await userCred.user.delete();
-      showToast('Code d\'association invalide'); 
-      return; 
+        const snapshot = await getDb().collection('associations').where('inviteCode', '==', code).get();
+        
+        if (snapshot.empty) { 
+          await userCred.user.delete();
+          showToast('Code d\'association invalide'); 
+          return; 
+        }
+
+        const assoDoc = snapshot.docs[0];
+        currentAssoId = assoDoc.id;
+        currentInviteCode = code;
+
+        await assoDoc.ref.collection('members').doc(uid).set({
+          prenom: prenom,
+          email: email,
+          role: 'Membre',
+          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        currentUserData = { prenom, role: 'Membre' };
+        localStorage.setItem('yesasso_last_asso', currentAssoId);
+        setupHomeScreen();
+      } catch (e) {
+        console.error("Erreur pour rejoindre :", e);
+        showToast('Erreur : ' + e.message);
+      }
     }
-
-    const assoDoc = snapshot.docs[0];
-    currentAssoId = assoDoc.id;
-    currentInviteCode = code;
-
-    // 3. On ajoute l'utilisateur dans la sous-collection "members" de l'asso
-    await assoDoc.ref.collection('members').doc(uid).set({
-      prenom: prenom,
-      email: email,
-      role: 'Membre',
-      joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    currentUserData = { prenom, role: 'Membre' };
-    localStorage.setItem('yesasso_last_asso', currentAssoId);
-    setupHomeScreen();
-  } catch (e) {
-    console.error("Erreur pour rejoindre :", e);
-    showToast('Erreur : ' + e.message);
-  }
-}
 
     async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
@@ -603,14 +599,13 @@ async function handleJoin() {
       });
     }
 
-function setupHomeScreen() {
+    function setupHomeScreen() {
       document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
       document.getElementById('role-display').textContent = currentUserData.role;
       document.getElementById('code-display').textContent = 'Code: ' + currentInviteCode;
 
       document.getElementById('btn-admin-module').style.display = (currentUserData.role === 'Président') ? 'flex' : 'none';
 
-      // Masquer ou afficher les boutons "+" d'ajout d'événement selon le rôle
       const userRole = currentUserData ? currentUserData.role : '';
       const canManageEvents = ['Président', 'Trésorier', 'Secrétaire'].includes(userRole);
       
@@ -691,7 +686,7 @@ function setupHomeScreen() {
       }
     }
 
-function loadEvents() {
+    function loadEvents() {
       getDb().collection('associations').doc(currentAssoId).collection('events')
         .orderBy('date', 'asc')
         .onSnapshot(snapshot => {
@@ -703,8 +698,6 @@ function loadEvents() {
             htmlContent = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement prévu</div>';
           } else {
             const now = new Date();
-            
-            // On autorise ici le Président, le Trésorier et le Secrétaire à supprimer un événement
             const userRole = currentUserData ? currentUserData.role : '';
             const canDelete = ['Président', 'Trésorier', 'Secrétaire'].includes(userRole);
 
@@ -731,7 +724,6 @@ function loadEvents() {
                 console.warn("Date non parsable pour l'événement :", item.title);
               }
 
-              // Le bouton s'affiche si l'utilisateur a l'un des rôles autorisés
               let deleteButtonHtml = '';
               if (canDelete) {
                 deleteButtonHtml = `<button class="delete-event-btn" onclick="deleteEvent('${eventId}', '${item.title || 'cet événement'}')" title="Supprimer">🗑️</button>`;
@@ -770,7 +762,7 @@ function loadEvents() {
       if (modal) modal.classList.remove('active');
     }
 
-async function submitEvent() {
+    async function submitEvent() {
       const userRole = currentUserData ? currentUserData.role : '';
       if (!['Président', 'Trésorier', 'Secrétaire'].includes(userRole)) {
         showToast('Action réservée au bureau (Président, Trésorier, Secrétaire)');
@@ -870,53 +862,6 @@ async function submitEvent() {
         showScreen('auth');
       }
     });
-
-function switchWelcomeTab(tabType) {
-  // Masquer les 3 gros onglets
-  document.getElementById('welcome-tabs-container').style.display = 'none';
-  // Afficher le conteneur du formulaire
-  const formContainer = document.getElementById('welcome-form-container');
-  formContainer.style.display = 'block';
-
-  const contentDiv = document.getElementById('dynamic-form-content');
-
-  // Charger le contenu HTML correspondant au choix de l'utilisateur
-  if (tabType === 'login') {
-    contentDiv.innerHTML = `
-      <h3>Connexion</h3>
-      <!-- Insère ici les champs de ton formulaire de connexion existant -->
-      <input type="email" id="login-email" placeholder="Adresse e-mail" class="input-field">
-      <input type="password" id="login-password" placeholder="Mot de passe" class="input-field">
-      <button onclick="handleLogin()" class="action-btn">Se connecter →</button>
-    `;
-  } else if (tabType === 'join') {
-    contentDiv.innerHTML = `
-      <h3>Rejoindre une association</h3>
-      <!-- Insère ici les champs pour rejoindre -->
-      <input type="text" id="join-code" placeholder="Code d'invitation" class="input-field">
-      <input type="text" id="join-prenom" placeholder="Ton prénom" class="input-field">
-      <input type="email" id="join-email" placeholder="Adresse e-mail" class="input-field">
-      <input type="password" id="join-password" placeholder="Mot de passe" class="input-field">
-      <button onclick="handleJoinAsso()" class="action-btn">Rejoindre l'asso →</button>
-    `;
-  } else if (tabType === 'create') {
-    contentDiv.innerHTML = `
-      <h3>Créer une association</h3>
-      <!-- Insère ici les champs pour créer -->
-      <input type="text" id="create-name" placeholder="Nom de l'association" class="input-field">
-      <input type="text" id="create-prenom" placeholder="Ton prénom (Président)" class="input-field">
-      <input type="email" id="create-email" placeholder="Adresse e-mail" class="input-field">
-      <input type="password" id="create-password" placeholder="Mot de passe" class="input-field">
-      <button onclick="handleCreateAsso()" class="action-btn">Créer l'asso →</button>
-    `;
-  }
-}
-
-function backToWelcomeTabs() {
-  // Réafficher les 3 gros onglets et cacher le formulaire
-  document.getElementById('welcome-form-container').style.display = 'none';
-  document.getElementById('welcome-tabs-container').style.display = 'flex';
-}
   </script>
 </body>
 </html>
