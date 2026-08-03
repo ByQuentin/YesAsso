@@ -438,37 +438,6 @@
       return 'YES-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     }
 
-    async function handleLogin() {
-      const email = document.getElementById('login-email').value.trim();
-      const mdp = document.getElementById('login-mdp').value.trim();
-      if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
-
-      try {
-        const userCred = await getAuth().signInWithEmailAndPassword(email, mdp);
-        const uid = userCred.user.uid;
-        const snapshot = await getDb().collectionGroup('members').get();
-        let foundAsso = null, foundMemberData = null;
-
-        snapshot.forEach(doc => {
-          if (doc.id === uid) {
-            foundMemberData = doc.data();
-            foundAsso = doc.ref.parent.parent;
-          }
-        });
-
-        if (!foundAsso) { showToast('Aucune association liée à ce compte'); return; }
-
-        currentAssoId = foundAsso.id;
-        const assoDoc = await foundAsso.get();
-        currentInviteCode = assoDoc.data().inviteCode;
-        currentUserData = foundMemberData;
-
-        setupHomeScreen();
-      } catch (e) {
-        showToast('Erreur : ' + e.message);
-      }
-    }
-
     async function handleCreateAsso() {
       const assoName = document.getElementById('create-asso-name').value.trim();
       const prenom = document.getElementById('create-prenom').value.trim();
@@ -538,6 +507,52 @@
       }
     }
 
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const mdp = document.getElementById('login-mdp').value.trim();
+      if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
+
+      try {
+        const userCred = await getAuth().signInWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
+
+        const assoSnapshot = await getDb().collection('associations').get();
+        let foundAsso = null, foundMemberData = null;
+
+        for (const assoDoc of assoSnapshot.docs) {
+          const memberDoc = await assoDoc.ref.collection('members').doc(uid).get();
+          if (memberDoc.exists) {
+            foundAsso = assoDoc;
+            foundMemberData = memberDoc.data();
+            break;
+          }
+        }
+
+        if (!foundAsso) { 
+          showToast('Aucune association liée à ce compte'); 
+          return; 
+        }
+
+        currentAssoId = foundAsso.id;
+        currentInviteCode = foundAsso.data().inviteCode;
+        currentUserData = foundMemberData;
+
+        setupHomeScreen();
+      } catch (e) {
+        console.error("Erreur de connexion :", e);
+        showToast('Erreur : ' + e.message);
+      }
+    }
+
+    function handleLogout() {
+      getAuth().signOut().then(() => {
+        currentAssoId = null;
+        currentUserData = null;
+        currentInviteCode = null;
+        showScreen('auth');
+      });
+    }
+
     function setupHomeScreen() {
       document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
       document.getElementById('role-display').textContent = currentUserData.role;
@@ -565,7 +580,7 @@
       });
     }
 
-function loadMembers() {
+    function loadMembers() {
       getDb().collection('associations').doc(currentAssoId).collection('members').onSnapshot(snapshot => {
         const list = document.getElementById('members-list');
         if (!list) return;
@@ -573,7 +588,7 @@ function loadMembers() {
         
         snapshot.forEach(change => {
           const member = change.data();
-          const memberId = change.id; // ID unique du document membre
+          const memberId = change.id;
           
           const isCurrentUserPresident = (currentUserData && currentUserData.role === 'Président');
           const isSelf = (memberId === getAuth().currentUser.uid);
@@ -606,7 +621,19 @@ function loadMembers() {
       });
     }
 
-function loadEvents() {
+    async function updateRole(memberUid, newRole) {
+      try {
+        await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberUid).update({
+          role: newRole
+        });
+        showToast('Rôle mis à jour');
+      } catch (e) {
+        console.error("Erreur mise à jour rôle :", e);
+        showToast('Erreur lors du changement de rôle');
+      }
+    }
+
+    function loadEvents() {
       getDb().collection('associations').doc(currentAssoId).collection('events')
         .orderBy('date', 'asc')
         .onSnapshot(snapshot => {
@@ -649,7 +676,17 @@ function loadEvents() {
         });
     }
 
-async function submitEvent() {
+    function openEventModal() {
+      const modal = document.getElementById('modal-event');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeEventModal() {
+      const modal = document.getElementById('modal-event');
+      if (modal) modal.classList.remove('active');
+    }
+
+    async function submitEvent() {
       const title = document.getElementById('event-title-input').value.trim();
       const location = document.getElementById('event-location-input').value.trim();
       const dateValue = document.getElementById('event-date-input').value;
@@ -657,7 +694,6 @@ async function submitEvent() {
       if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
 
       try {
-        // Transformation de la date locale en objet Date JS puis en Timestamp Firestore
         const localDate = new Date(dateValue);
 
         await getDb().collection('associations').doc(currentAssoId).collection('events').add({
@@ -678,41 +714,22 @@ async function submitEvent() {
       }
     }
 
-async function handleLogin() {
-      const email = document.getElementById('login-email').value.trim();
-      const mdp = document.getElementById('login-mdp').value.trim();
-      if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
+    async function kickMember(memberUid, memberName) {
+      if (!currentUserData || currentUserData.role !== 'Président') {
+        showToast('Action réservée au président');
+        return;
+      }
+
+      if (!confirm(`Es-tu sûr de vouloir virer ${memberName || 'ce membre'} de l'association ?`)) {
+        return;
+      }
 
       try {
-        const userCred = await getAuth().signInWithEmailAndPassword(email, mdp);
-        const uid = userCred.user.uid;
-
-        // Recherche directe par email dans les associations pour éviter le blocage du collectionGroup
-        const assoSnapshot = await getDb().collection('associations').get();
-        let foundAsso = null, foundMemberData = null;
-
-        for (const assoDoc of assoSnapshot.docs) {
-          const memberDoc = await assoDoc.ref.collection('members').doc(uid).get();
-          if (memberDoc.exists) {
-            foundAsso = assoDoc;
-            foundMemberData = memberDoc.data();
-            break;
-          }
-        }
-
-        if (!foundAsso) { 
-          showToast('Aucune association liée à ce compte'); 
-          return; 
-        }
-
-        currentAssoId = foundAsso.id;
-        currentInviteCode = foundAsso.data().inviteCode;
-        currentUserData = foundMemberData;
-
-        setupHomeScreen();
+        await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberUid).delete();
+        showToast('Membre exclu avec succès');
       } catch (e) {
-        console.error("Erreur de connexion :", e);
-        showToast('Erreur : ' + e.message);
+        console.error("Erreur lors de l'exclusion du membre :", e);
+        showToast('Erreur lors de l\'exclusion');
       }
     }
 
@@ -756,73 +773,6 @@ async function handleLogin() {
         console.error("Erreur de configuration de la persistance :", error);
         showScreen('auth');
       });
-
-async function kickMember(memberUid, memberName) {
-      if (!currentUserData || currentUserData.role !== 'Président') {
-        showToast('Action réservée au président');
-        return;
-      }
-
-      if (!confirm(`Es-tu sûr de vouloir virer ${memberName || 'ce membre'} de l'association ?`)) {
-        return;
-      }
-
-      try {
-        await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberUid).delete();
-        showToast('Membre exclu avec succès');
-      } catch (e) {
-        console.error("Erreur lors de l'exclusion du membre :", e);
-        showToast('Erreur lors de l\'exclusion');
-      }
-    }
-
-    // Exemple à intégrer dans ta boucle d'affichage des membres :
-const isCurrentUserPresident = (currentUserData && currentUserData.role === 'Président');
-const isSelf = (change.id === getAuth().currentUser.uid);
-let kickButtonHtml = '';
-if (isCurrentUserPresident && !isSelf) {
-  kickButtonHtml = `<button onclick="kickMember('${member.uid}', '${member.name}')" style="background:var(--danger, #ff4d4d); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">Virer</button>`;
-}
-function openEventModal() {
-      // 1. Cherche en priorité un modal avec "event" ou "agenda" dans son ID
-      let modal = document.querySelector('[id*="event" i], [id*="agenda" i], [id*="evenement" i]');
-      
-      // 2. Si rien trouvé, prends le dernier modal de ta liste
-      if (!modal) {
-        const modals = document.querySelectorAll('.modal');
-        if (modals.length > 0) {
-          modal = modals[modals.length - 1];
-        }
-      }
-
-      if (modal) {
-        // Applique l'affichage selon ce que ton application utilise
-        modal.style.display = 'flex'; // ou 'block' si ton appli utilise block
-        modal.classList.add('active', 'show', 'open'); // Sécurité pour les classes d'activation CSS
-        console.log("Modal ouvert :", modal.id || modal.className);
-      } else {
-        console.error("Impossible de trouver le modal d'événement dans le DOM.");
-      }
-    }
-    // Force l'écoute de tous les boutons "+" ou d'ajout d'événement
-    document.addEventListener('click', function(e) {
-      const target = e.target.closest('button, .btn, [role="button"]');
-      if (!target) return;
-      
-      // Si le bouton cliqué est celui de l'agenda (contient un "+" ou se trouve dans la section agenda)
-      if (target.textContent.includes('+') || target.closest('#agenda-header, .agenda-top')) {
-        e.preventDefault();
-        
-        // Ouvre le dernier modal de la liste (souvent le modal actif ou le dernier créé)
-        const allModals = document.querySelectorAll('.modal, [id*="modal" i]');
-        if (allModals.length > 0) {
-          const targetModal = allModals[allModals.length - 1];
-          targetModal.style.display = 'flex';
-          targetModal.classList.add('active', 'open');
-        }
-      }
-    });
-
   </script>
 </body>
 </html>
