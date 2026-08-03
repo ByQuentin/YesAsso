@@ -651,18 +651,23 @@
       if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
 
       try {
+        // Transformation propre de la date locale en objet Date JS puis en Timestamp Firestore
+        const localDate = new Date(dateValue);
+
         await getDb().collection('associations').doc(currentAssoId).collection('events').add({
           title: title,
           location: location || 'Non spécifié',
-          date: firebase.firestore.Timestamp.fromDate(new Date(dateValue))
+          date: firebase.firestore.Timestamp.fromDate(localDate),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         closeEventModal();
         document.getElementById('event-title-input').value = '';
         document.getElementById('event-location-input').value = '';
         document.getElementById('event-date-input').value = '';
-        showToast('Événement ajouté !');
+        showToast('Événement ajouté avec succès !');
       } catch (e) {
+        console.error("Erreur ajout événement :", e);
         showToast('Erreur d\'ajout d\'événement');
       }
     }
