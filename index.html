@@ -603,7 +603,7 @@
       }
     }
 
-    function loadEvents() {
+function loadEvents() {
       getDb().collection('associations').doc(currentAssoId).collection('events')
         .orderBy('date', 'asc')
         .onSnapshot(snapshot => {
@@ -616,27 +616,33 @@
           } else {
             snapshot.forEach(doc => {
               const item = doc.data();
-              const d = item.date ? item.date.toDate() : new Date();
-              const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
-              const day = d.getDate();
-              const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
+              try {
+                const d = item.date && typeof item.date.toDate === 'function' ? item.date.toDate() : new Date(item.date);
+                if (isNaN(d)) throw new Error("Date invalide");
 
-              htmlContent += `
-                <div class="event-item">
-                  <div class="event-date">
-                    <div class="event-month">${month}</div>
-                    <div class="event-day">${day}</div>
+                const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
+                const day = d.getDate();
+                const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
+
+                htmlContent += `
+                  <div class="event-item">
+                    <div class="event-date">
+                      <div class="event-month">${month}</div>
+                      <div class="event-day">${day}</div>
+                    </div>
+                    <div class="event-info">
+                      <div class="event-title">${item.title}</div>
+                      <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
+                    </div>
                   </div>
-                  <div class="event-info">
-                    <div class="event-title">${item.title}</div>
-                    <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
-                  </div>
-                </div>
-              `;
+                `;
+              } catch (err) {
+                console.warn("Événement ignoré (date invalide) :", item);
+              }
             });
           }
-          list.innerHTML = htmlContent;
-          agendaList.innerHTML = htmlContent;
+          if (list) list.innerHTML = htmlContent;
+          if (agendaList) agendaList.innerHTML = htmlContent;
         });
     }
 
