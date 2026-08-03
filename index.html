@@ -784,12 +784,24 @@ if (isCurrentUserPresident && !isSelf) {
   kickButtonHtml = `<button onclick="kickMember('${member.uid}', '${member.name}')" style="background:var(--danger, #ff4d4d); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">Virer</button>`;
 }
 function openEventModal() {
-      // Cherche automatiquement un modal qui contient "event" ou "agenda" dans son ID ou sa classe
-      const modal = document.querySelector('[id*="event"], [id*="agenda"], [class*="modal"]');
+      // 1. Cherche en priorité un modal avec "event" ou "agenda" dans son ID
+      let modal = document.querySelector('[id*="event" i], [id*="agenda" i], [id*="evenement" i]');
+      
+      // 2. Si rien trouvé, prends le dernier modal de ta liste
+      if (!modal) {
+        const modals = document.querySelectorAll('.modal');
+        if (modals.length > 0) {
+          modal = modals[modals.length - 1];
+        }
+      }
+
       if (modal) {
-        modal.style.display = 'block';
+        // Applique l'affichage selon ce que ton application utilise
+        modal.style.display = 'flex'; // ou 'block' si ton appli utilise block
+        modal.classList.add('active', 'show', 'open'); // Sécurité pour les classes d'activation CSS
+        console.log("Modal ouvert :", modal.id || modal.className);
       } else {
-        console.warn("Aucun modal trouvé pour l'agenda");
+        console.error("Impossible de trouver le modal d'événement dans le DOM.");
       }
     }
 
