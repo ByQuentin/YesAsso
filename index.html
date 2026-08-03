@@ -165,22 +165,324 @@
     }
     .section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
   </style>
+</head>
+<body>
 
-  <!-- Firebase Scripts -->
+  <!-- TES ÉLÉMENTS HTML DU CORPS DE LA PAGE (PHONE, SCREENS, ETC.) ICI -->
+
+  <!-- 1. CHARGEMENT DES SCRIPTS FIREBASE D'ABORD -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+  <!-- 2. TON SCRIPT APPLICATIF ENSUITE -->
   <script>
-    // Force la suppression des anciens caches Service Worker lors du chargement
+    // Force le nettoyage du cache Service Worker
     if ('serviceWorker' in navigator) {
-      caches.keys().then(function(names) {
+      caches.keys().then(names => {
         for (let name of names) caches.delete(name);
       });
     }
+
+    // CONFIGURATION FIREBASE
+    const firebaseConfig = {
+      authDomain: "yesasso-b23c2.firebaseapp.com",
+      projectId: "yesasso-b23c2",
+      storageBucket: "yesasso-b23c2.firebasestorage.app",
+      messagingSenderId: "783342738476",
+      appId: "1:783342738476:web:6ed6ec8c77aa7a488c9354"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    
+    // Initialisation après le chargement des scripts SDK
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+
+    // VARIABLES GLOBALES
+    let currentAssoId = null;
+    let currentUserData = null;
+    let currentInviteCode = null;
+
+    // NAVIGATION & TABS
+    function switchTab(type) {
+      document.getElementById('tab-login').classList.toggle('active', type === 'login');
+      document.getElementById('tab-join').classList.toggle('active', type === 'join');
+      document.getElementById('tab-create').classList.toggle('active', type === 'create');
+
+      document.getElementById('form-login').style.display = type === 'login' ? 'block' : 'none';
+      document.getElementById('form-join').style.display = type === 'join' ? 'block' : 'none';
+      document.getElementById('form-create').style.display = type === 'create' ? 'block' : 'none';
+    }
+
+    function showScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + name).classList.add('active');
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if (t) {
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+      } else {
+        alert(msg);
+      }
+    }
+
+    function generateInviteCode() {
+      return 'YES-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    }
+
+    // FONCTIONS AUTHENTIFICATION
+
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const mdp = document.getElementById('login-mdp').value.trim();
+
+      if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
+
+      try {
+        const userCred = await auth.signInWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
+
+        const snapshot = await db.collectionGroup('members').get();
+        let foundAsso = null;
+        let foundMemberData = null;
+
+        snapshot.forEach(doc => {
+          if (doc.id === uid) {
+            foundMemberData = doc.data();
+            foundAsso = doc.ref.parent.parent;
+          }
+        });
+
+        if (!foundAsso) {
+          showToast('Aucune association liée à ce compte');
+          return;
+        }
+
+        currentAssoId = foundAsso.id;
+        const assoDoc = await foundAsso.get();
+        currentInviteCode = assoDoc.data().inviteCode;
+        currentUserData = foundMemberData;
+
+        setupHomeScreen();
+      } catch (e) {
+        showToast('Erreur : ' + e.message);
+      }
+    }
+
+    async function handleCreateAsso() {
+      const assoName = document.getElementById('create-asso-name').value.trim();
+      const prenom = document.getElementById('create-prenom').value.trim();
+      const email = document.getElementById('create-email').value.trim();
+      const mdp = document.getElementById('create-mdp').value.trim();
+
+      if (!assoName || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
+
+      try {
+        const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
+        const inviteCode = generateInviteCode();
+
+        const assoRef = await db.collection('associations').add({
+          name: assoName,
+          inviteCode: inviteCode,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        currentAssoId = assoRef.id;
+        currentInviteCode = inviteCode;
+
+        await assoRef.collection('members').doc(uid).set({
+          prenom: prenom,
+          email: email,
+          role: 'Président',
+          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        currentUserData = { prenom, role: 'Président' };
+        setupHomeScreen();
+      } catch (e) {
+        showToast('Erreur : ' + e.message);
+      }
+    }
+
+    async function handleJoin() {
+      const code = document.getElementById('join-code').value.trim().toUpperCase();
+      const prenom = document.getElementById('join-prenom').value.trim();
+      const email = document.getElementById('join-email').value.trim();
+      const mdp = document.getElementById('join-mdp').value.trim();
+
+      if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
+
+      try {
+        const snapshot = await db.collection('associations').where('inviteCode', '==', code).get();
+        if (snapshot.empty) { showToast('Code d\'association invalide'); return; }
+
+        const assoDoc = snapshot.docs[0];
+        currentAssoId = assoDoc.id;
+        currentInviteCode = code;
+
+        const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
+
+        await assoDoc.ref.collection('members').doc(uid).set({
+          prenom: prenom,
+          email: email,
+          role: 'Membre',
+          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        currentUserData = { prenom, role: 'Membre' };
+        setupHomeScreen();
+      } catch (e) {
+        showToast('Erreur : ' + e.message);
+      }
+    }
+
+    // LOGIQUE HOME ET EVENEMENTS
+    function setupHomeScreen() {
+      document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
+      document.getElementById('role-display').textContent = currentUserData.role;
+      document.getElementById('code-display').textContent = 'Code: ' + currentInviteCode;
+
+      if (currentUserData.role === 'Président') {
+        document.getElementById('btn-admin-module').style.display = 'flex';
+      } else {
+        document.getElementById('btn-admin-module').style.display = 'none';
+      }
+
+      loadAssociationInfo();
+      loadEvents();
+      loadMembers();
+      showScreen('home');
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(currentInviteCode);
+      showToast('Code ' + currentInviteCode + ' copié !');
+    }
+
+    function loadAssociationInfo() {
+      db.collection('associations').doc(currentAssoId).onSnapshot(doc => {
+        if (doc.exists) {
+          document.getElementById('home-asso-title').textContent = doc.data().name;
+          document.getElementById('home-asso-sub').textContent = `Espace collaboratif`;
+        }
+      });
+    }
+
+    function loadMembers() {
+      db.collection('associations').doc(currentAssoId).collection('members').onSnapshot(snapshot => {
+        const list = document.getElementById('members-list');
+        list.innerHTML = '';
+        
+        snapshot.forEach(doc => {
+          const member = doc.data();
+          const memberId = doc.id;
+          
+          list.innerHTML += `
+            <div class="member-card">
+              <div class="member-info">
+                <span class="member-name">${member.prenom}</span>
+                <span class="member-role-text">${member.email || ''} · ${member.role}</span>
+              </div>
+              ${currentUserData.role === 'Président' ? `
+                <select class="field-select" style="width: auto; padding: 6px 10px;" onchange="updateRole('${memberId}', this.value)">
+                  <option value="Membre" ${member.role === 'Membre' ? 'selected' : ''}>Membre</option>
+                  <option value="Trésorier" ${member.role === 'Trésorier' ? 'selected' : ''}>Trésorier</option>
+                  <option value="Secrétaire" ${member.role === 'Secrétaire' ? 'selected' : ''}>Secrétaire</option>
+                  <option value="Président" ${member.role === 'Président' ? 'selected' : ''}>Président</option>
+                </select>
+              ` : ''}
+            </div>
+          `;
+        });
+      });
+    }
+
+    async function updateRole(memberId, newRole) {
+      try {
+        await db.collection('associations').doc(currentAssoId).collection('members').doc(memberId).update({
+          role: newRole
+        });
+        showToast('Rôle mis à jour !');
+      } catch (e) {
+        showToast('Erreur mise à jour rôle');
+      }
+    }
+
+    function loadEvents() {
+      db.collection('associations').doc(currentAssoId).collection('events')
+        .orderBy('date', 'asc')
+        .onSnapshot(snapshot => {
+          const list = document.getElementById('events-list');
+          list.innerHTML = '';
+
+          if (snapshot.empty) {
+            list.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement prévu</div>';
+            return;
+          }
+
+          snapshot.forEach(doc => {
+            const item = doc.data();
+            const d = item.date ? item.date.toDate() : new Date();
+            const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
+            const day = d.getDate();
+            const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
+
+            list.innerHTML += `
+              <div class="event-item">
+                <div class="event-date">
+                  <div class="event-month">${month}</div>
+                  <div class="event-day">${day}</div>
+                </div>
+                <div class="event-info">
+                  <div class="event-title">${item.title}</div>
+                  <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
+                </div>
+              </div>
+            `;
+          });
+        });
+    }
+
+    function openEventModal() { document.getElementById('modal-event').classList.add('active'); }
+    function closeEventModal() { document.getElementById('modal-event').classList.remove('active'); }
+
+    async function submitEvent() {
+      const title = document.getElementById('event-title-input').value.trim();
+      const location = document.getElementById('event-location-input').value.trim();
+      const dateValue = document.getElementById('event-date-input').value;
+
+      if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
+
+      try {
+        await db.collection('associations').doc(currentAssoId).collection('events').add({
+          title: title,
+          location: location || 'Non spécifié',
+          date: firebase.firestore.Timestamp.fromDate(new Date(dateValue))
+        });
+
+        closeEventModal();
+        document.getElementById('event-title-input').value = '';
+        document.getElementById('event-location-input').value = '';
+        document.getElementById('event-date-input').value = '';
+        showToast('Événement ajouté !');
+      } catch (e) {
+        showToast('Erreur d\'ajout d\'événement');
+      }
+    }
   </script>
-</head>
-<body>
+</body>
+</html>
 
 <div class="phone">
 
