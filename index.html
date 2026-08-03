@@ -804,6 +804,24 @@ function openEventModal() {
         console.error("Impossible de trouver le modal d'événement dans le DOM.");
       }
     }
+    // Force l'écoute de tous les boutons "+" ou d'ajout d'événement
+    document.addEventListener('click', function(e) {
+      const target = e.target.closest('button, .btn, [role="button"]');
+      if (!target) return;
+      
+      // Si le bouton cliqué est celui de l'agenda (contient un "+" ou se trouve dans la section agenda)
+      if (target.textContent.includes('+') || target.closest('#agenda-header, .agenda-top')) {
+        e.preventDefault();
+        
+        // Ouvre le dernier modal de la liste (souvent le modal actif ou le dernier créé)
+        const allModals = document.querySelectorAll('.modal, [id*="modal" i]');
+        if (allModals.length > 0) {
+          const targetModal = allModals[allModals.length - 1];
+          targetModal.style.display = 'flex';
+          targetModal.classList.add('active', 'open');
+        }
+      }
+    });
 
   </script>
 </body>
