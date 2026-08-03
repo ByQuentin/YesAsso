@@ -212,7 +212,7 @@
       <div id="form-join" style="display: none; width: 100%;">
         <div class="field-group">
           <label class="field-label">Code d'invitation</label>
-          <input type="text" id="join-code" class="field-input" placeholder="EX: YES-XXXX">
+          <input type="text" id="join-code" class="field-input" placeholder="EX: XXX-XXXX">
         </div>
         <div class="field-group">
           <label class="field-label">Ton prénom</label>
@@ -778,7 +778,7 @@ async function submitEvent() {
         showToast('Erreur d\'ajout d\'événement');
       }
     }
-    
+
     async function deleteEvent(eventId, eventTitle) {
       if (!confirm(`Supprimer l'événement "${eventTitle}" ?`)) return;
 
