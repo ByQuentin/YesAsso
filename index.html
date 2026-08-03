@@ -605,15 +605,6 @@ function loadMembers() {
         });
       });
     }
-    
-    async function updateRole(memberId, newRole) {
-      try {
-        await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberId).update({ role: newRole });
-        showToast('Rôle mis à jour !');
-      } catch (e) {
-        showToast('Erreur mise à jour rôle');
-      }
-    }
 
 function loadEvents() {
       getDb().collection('associations').doc(currentAssoId).collection('events')
@@ -657,10 +648,7 @@ function loadEvents() {
           if (agendaList) agendaList.innerHTML = htmlContent;
         });
     }
-
-    function openEventModal() { document.getElementById('modal-event').classList.add('active'); }
-    function closeEventModal() { document.getElementById('modal-event').classList.remove('active'); }
-
+    
 async function submitEvent() {
       const title = document.getElementById('event-title-input').value.trim();
       const location = document.getElementById('event-location-input').value.trim();
