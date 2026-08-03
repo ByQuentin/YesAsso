@@ -161,6 +161,13 @@
       width: 36px; height: 36px; background: var(--blue); border: none; border-radius: 50%;
       color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
+    .delete-event-btn {
+      background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--danger);
+      width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 14px; transition: background .15s; flex-shrink: 0;
+    }
+    .delete-event-btn:hover { background: var(--danger); color: #fff; }
+
     .logout-btn {
       width: 36px; height: 36px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 50%;
       color: var(--danger); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -647,6 +654,7 @@
           } else {
             snapshot.forEach(doc => {
               const item = doc.data();
+              const eventId = doc.id;
               let month = 'PRO';
               let day = '--';
               let time = 'Heure non spécifiée';
@@ -672,6 +680,7 @@
                     <div class="event-title">${item.title || 'Sans titre'}</div>
                     <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || 'Lieu non spécifié'}</div>
                   </div>
+                  <button class="delete-event-btn" onclick="deleteEvent('${eventId}', '${item.title || 'cet événement'}')" title="Supprimer">🗑️</button>
                 </div>
               `;
             });
@@ -716,6 +725,18 @@
       } catch (e) {
         console.error("Erreur ajout événement :", e);
         showToast('Erreur d\'ajout d\'événement');
+      }
+    }
+
+    async function deleteEvent(eventId, eventTitle) {
+      if (!confirm(`Supprimer l'événement "${eventTitle}" ?`)) return;
+
+      try {
+        await getDb().collection('associations').doc(currentAssoId).collection('events').doc(eventId).delete();
+        showToast('Événement supprimé');
+      } catch (e) {
+        console.error("Erreur suppression événement :", e);
+        showToast('Erreur lors de la suppression');
       }
     }
 
