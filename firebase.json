@@ -6,15 +6,9 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ],
     "headers": [
       {
-        "source": "/sw.js",
+        "source": "**/index.html",
         "headers": [
           {
             "key": "Cache-Control",
