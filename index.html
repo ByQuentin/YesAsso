@@ -141,6 +141,20 @@
       white-space: nowrap; z-index: 100;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Modale de création d'événement */
+    .modal-overlay {
+      position: absolute; inset: 0; background: rgba(10, 14, 26, 0.85); backdrop-filter: blur(4px);
+      display: none; align-items: flex-end; justify-content: center; z-index: 50;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      width: 100%; background: var(--card); border-top: 1px solid var(--border);
+      border-radius: 24px 24px 0 0; padding: 24px; animation: slideUp 0.2s ease-out;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -224,7 +238,7 @@
     <div class="topbar">
       <button class="back-btn" onclick="showScreen('home')">‹</button>
       <h1>Agenda</h1>
-      <button class="add-btn" onclick="handleAddEvent()">+</button>
+      <button class="add-btn" onclick="openEventModal()">+</button>
     </div>
 
     <div class="scroll-zone">
@@ -236,17 +250,39 @@
     <div class="ad-banner"><span class="ad-badge">Pub</span>Supprimer les publicités — Achat unique 2,99 €</div>
   </div>
 
+  <!-- Modale d'ajout d'événement -->
+  <div class="modal-overlay" id="modal-event">
+    <div class="modal-content">
+      <div class="modal-title">
+        <span>Nouvel événement</span>
+        <button class="modal-close" onclick="closeEventModal()">✕</button>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Titre</div>
+        <input class="field-input" type="text" id="event-title-input" placeholder="Réunion générale">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Lieu</div>
+        <input class="field-input" type="text" id="event-location-input" placeholder="Salle des fêtes">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Date et Heure</div>
+        <input class="field-input" type="datetime-local" id="event-date-input">
+      </div>
+      <button class="btn-join" onclick="submitEvent()">Ajouter l'événement</button>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 </div>
 
 <script>
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    authDomain: "yesasso-b23c2.firebaseapp.com",
+    projectId: "yesasso-b23c2",
+    storageBucket: "yesasso-b23c2.firebasestorage.app",
+    messagingSenderId: "783342738476",
+    appId: "1:783342738476:web:6ed6ec8c77aa7a488c9354"
   };
 
   firebase.initializeApp(firebaseConfig);
@@ -255,6 +291,9 @@
 
   let currentAssoId = "demo-asso";
   let currentUserData = null;
+
+  // Charger les données de l'asso dès l'ouverture
+  loadAssociationData();
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js'); });
@@ -279,7 +318,9 @@
     const mdp = document.getElementById('input-mdp').value.trim();
     if (!prenom || !mdp) { showToast('Remplis le prénom et mot de passe'); return; }
 
-    const email = `${prenom.toLowerCase().replace(/\s+/g, '')}@yesasso.local`;
+    const cleanName = prenom.toLowerCase().replace(/\s+/g, '');
+    const cleanPass = mdp.slice(-4);
+    const email = `${cleanName}-${cleanPass}@yesasso.local`;
 
     try {
       let userCred;
@@ -302,7 +343,6 @@
       document.getElementById('avatar-initials').textContent = initials;
       document.getElementById('role-display').textContent = currentUserData.role;
 
-      loadAssociationData();
       loadEvents();
       showScreen('home');
     } catch (err) {
@@ -314,10 +354,17 @@
     db.collection('associations').doc(currentAssoId).onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
-        document.getElementById('asso-display-name').textContent = data.name || 'Association';
+        document.getElementById('asso-display-name').textContent = data.name || 'Association Demo';
         document.getElementById('asso-display-count').textContent = data.memberCount || 1;
-        document.getElementById('home-asso-title').textContent = data.name || 'Association';
-        document.getElementById('home-asso-sub').textContent = `${data.memberCount || 1} membres · ${data.subtitle || ''}`;
+        document.getElementById('home-asso-title').textContent = data.name || 'Association Demo';
+        document.getElementById('home-asso-sub').textContent = `${data.memberCount || 1} membres · ${data.subtitle || 'Bienvenue'}`;
+      } else {
+        // Asso par défaut si elle n'existe pas encore dans Firestore
+        db.collection('associations').doc(currentAssoId).set({
+          name: "Association Demo",
+          subtitle: "Espace communautaire",
+          memberCount: 1
+        });
       }
     });
   }
@@ -330,7 +377,7 @@
         list.innerHTML = '';
 
         if (snapshot.empty) {
-          list.innerHTML = '<div style="color:var(--muted);font-size:14px;">Aucun événement à venir</div>';
+          list.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement à venir</div>';
           document.getElementById('next-event-title').textContent = 'Aucun événement';
           document.getElementById('next-event-sub').textContent = '--';
           return;
@@ -367,19 +414,39 @@
       });
   }
 
-  async function handleAddEvent() {
-    if (!auth.currentUser) return;
-    const title = prompt("Titre de l'événement :");
-    if (!title) return;
-    const location = prompt("Lieu :", "Salle des fêtes");
+  function openEventModal() {
+    document.getElementById('modal-event').classList.add('active');
+  }
 
-    await db.collection('associations').doc(currentAssoId).collection('events').add({
-      title: title,
-      location: location || '',
-      date: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 86400000 * 7))
-    });
+  function closeEventModal() {
+    document.getElementById('modal-event').classList.remove('active');
+  }
 
-    showToast('Événement ajouté !');
+  async function submitEvent() {
+    const title = document.getElementById('event-title-input').value.trim();
+    const location = document.getElementById('event-location-input').value.trim();
+    const dateValue = document.getElementById('event-date-input').value;
+
+    if (!title || !dateValue) {
+      showToast('Merci d\'indiquer un titre et une date');
+      return;
+    }
+
+    try {
+      await db.collection('associations').doc(currentAssoId).collection('events').add({
+        title: title,
+        location: location || 'Non spécifié',
+        date: firebase.firestore.Timestamp.fromDate(new Date(dateValue))
+      });
+
+      closeEventModal();
+      document.getElementById('event-title-input').value = '';
+      document.getElementById('event-location-input').value = '';
+      document.getElementById('event-date-input').value = '';
+      showToast('Événement ajouté !');
+    } catch (e) {
+      showToast('Erreur lors de l\'ajout');
+    }
   }
 </script>
 </body>
