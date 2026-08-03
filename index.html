@@ -62,7 +62,7 @@
       font-size: 32px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(37,99,235,.4);
     }
     .auth-tabs { display: flex; background: var(--card2); border-radius: 12px; padding: 4px; width: 100%; margin-bottom: 20px; border: 1px solid var(--border); }
-    .auth-tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all .2s; }
+    .auth-tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all .2s; }
     .auth-tab.active { background: var(--blue); color: #fff; }
 
     .field-group { width: 100%; margin-bottom: 14px; }
@@ -166,6 +166,7 @@
     .section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
   </style>
 
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -174,17 +175,31 @@
 
 <div class="phone">
 
-  <!-- Ecran d'authentification (Rejoindre / Créer) -->
+  <!-- Ecran d'authentification (Connexion / Rejoindre / Créer) -->
   <div class="screen auth-screen active" id="screen-auth">
     <div class="asso-icon">👥</div>
     
     <div class="auth-tabs">
-      <div class="auth-tab active" id="tab-join" onclick="switchTab('join')">Rejoindre</div>
-      <div class="auth-tab" id="tab-create" onclick="switchTab('create')">Créer une Asso</div>
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Se connecter</div>
+      <div class="auth-tab" id="tab-join" onclick="switchTab('join')">Rejoindre</div>
+      <div class="auth-tab" id="tab-create" onclick="switchTab('create')">Créer Asso</div>
     </div>
 
-    <!-- Formulaire Rejoindre -->
-    <div id="form-join" style="width:100%;">
+    <!-- Formulaire 1: Connexion -->
+    <div id="form-login" style="width:100%;">
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Adresse e-mail</div>
+        <input class="field-input" type="email" placeholder="ton-email@exemple.fr" id="login-email">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Mot de passe</div>
+        <input class="field-input" type="password" placeholder="••••••••" id="login-mdp">
+      </div>
+      <button class="btn-action" onclick="handleLogin()">Connexion →</button>
+    </div>
+
+    <!-- Formulaire 2: Rejoindre avec un code -->
+    <div id="form-join" style="width:100%; display:none;">
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Code d'invitation</div>
         <input class="field-input" type="text" placeholder="YES-XXXX" id="join-code" style="text-transform:uppercase;">
@@ -201,10 +216,10 @@
         <div class="field-label"><span class="req">✦</span> Mot de passe</div>
         <input class="field-input" type="password" placeholder="••••••••" id="join-mdp">
       </div>
-      <button class="btn-action" onclick="handleJoin()">Rejoindre l'association →</button>
+      <button class="btn-action" onclick="handleJoin()">Créer mon compte & Rejoindre →</button>
     </div>
 
-    <!-- Formulaire Créer -->
+    <!-- Formulaire 3: Créer une asso -->
     <div id="form-create" style="width:100%; display:none;">
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Nom de l'association</div>
@@ -222,7 +237,7 @@
         <div class="field-label"><span class="req">✦</span> Mot de passe</div>
         <input class="field-input" type="password" placeholder="••••••••" id="create-mdp">
       </div>
-      <button class="btn-action" onclick="handleCreateAsso()">Créer & devenir Président →</button>
+      <button class="btn-action" onclick="handleCreateAsso()">Créer Asso & Devenir Président →</button>
     </div>
 
     <div style="height: 20px;"></div>
@@ -335,6 +350,7 @@
 </div>
 
 <script>
+  // Initialisation de Firebase
   const firebaseConfig = {
     authDomain: "yesasso-b23c2.firebaseapp.com",
     projectId: "yesasso-b23c2",
@@ -352,8 +368,11 @@
   let currentInviteCode = null;
 
   function switchTab(type) {
+    document.getElementById('tab-login').classList.toggle('active', type === 'login');
     document.getElementById('tab-join').classList.toggle('active', type === 'join');
     document.getElementById('tab-create').classList.toggle('active', type === 'create');
+
+    document.getElementById('form-login').style.display = type === 'login' ? 'block' : 'none';
     document.getElementById('form-join').style.display = type === 'join' ? 'block' : 'none';
     document.getElementById('form-create').style.display = type === 'create' ? 'block' : 'none';
   }
@@ -376,7 +395,46 @@
     return 'YES-' + Math.random().toString(36).substring(2, 6).toUpperCase();
   }
 
-  // CRÉATION D'UNE ASSOCIATION ET COMPTE PRÉSIDENT
+  // 1. SE CONNECTER A UN COMPTE EXISTANT
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const mdp = document.getElementById('login-mdp').value.trim();
+
+    if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
+
+    try {
+      const userCred = await auth.signInWithEmailAndPassword(email, mdp);
+      const uid = userCred.user.uid;
+
+      // Chercher à quelle association appartient cet utilisateur
+      const snapshot = await db.collectionGroup('members').get();
+      let foundAsso = null;
+      let foundMemberData = null;
+
+      snapshot.forEach(doc => {
+        if (doc.id === uid) {
+          foundMemberData = doc.data();
+          foundAsso = doc.ref.parent.parent;
+        }
+      });
+
+      if (!foundAsso) {
+        showToast('Aucune association liée à ce compte');
+        return;
+      }
+
+      currentAssoId = foundAsso.id;
+      const assoDoc = await foundAsso.get();
+      currentInviteCode = assoDoc.data().inviteCode;
+      currentUserData = foundMemberData;
+
+      setupHomeScreen();
+    } catch (e) {
+      showToast('Erreur de connexion : ' + e.message);
+    }
+  }
+
+  // 2. CRÉER UNE ASSO ET DEVENIR PRÉSIDENT
   async function handleCreateAsso() {
     const assoName = document.getElementById('create-asso-name').value.trim();
     const prenom = document.getElementById('create-prenom').value.trim();
@@ -390,7 +448,6 @@
       const uid = userCred.user.uid;
       const inviteCode = generateInviteCode();
 
-      // Créer la sous-collection Asso
       const assoRef = await db.collection('associations').add({
         name: assoName,
         inviteCode: inviteCode,
@@ -400,7 +457,6 @@
       currentAssoId = assoRef.id;
       currentInviteCode = inviteCode;
 
-      // Créer le membre Président
       await assoRef.collection('members').doc(uid).set({
         prenom: prenom,
         email: email,
@@ -411,17 +467,11 @@
       currentUserData = { prenom, role: 'Président' };
       setupHomeScreen();
     } catch (e) {
-      if (e.code === 'auth/email-already-in-use') {
-        showToast('Cet e-mail est déjà utilisé.');
-      } else if (e.code === 'auth/weak-password') {
-        showToast('Mot de passe trop court (6 caract. min).');
-      } else {
-        showToast('Erreur : ' + e.message);
-      }
+      showToast('Erreur : ' + e.message);
     }
   }
 
-  // REJOINDRE UNE ASSOCIATION PAR CODE
+  // 3. REJOINDRE AVEC UN CODE D'INVITATION
   async function handleJoin() {
     const code = document.getElementById('join-code').value.trim().toUpperCase();
     const prenom = document.getElementById('join-prenom').value.trim();
@@ -431,7 +481,6 @@
     if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
 
     try {
-      // Trouver l'association correspondant au code
       const snapshot = await db.collection('associations').where('inviteCode', '==', code).get();
       if (snapshot.empty) { showToast('Code d\'association invalide'); return; }
 
@@ -439,30 +488,17 @@
       currentAssoId = assoDoc.id;
       currentInviteCode = code;
 
-      let userCred;
-      try {
-        userCred = await auth.signInWithEmailAndPassword(email, mdp);
-      } catch (e) {
-        userCred = await auth.createUserWithEmailAndPassword(email, mdp);
-      }
-
+      const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
       const uid = userCred.user.uid;
 
-      // Vérifier si le membre existe déjà dans cette asso
-      const memberDoc = await assoDoc.ref.collection('members').doc(uid).get();
-      let role = 'Membre';
-      if (memberDoc.exists) {
-        role = memberDoc.data().role || 'Membre';
-      } else {
-        await assoDoc.ref.collection('members').doc(uid).set({
-          prenom: prenom,
-          email: email,
-          role: role,
-          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
+      await assoDoc.ref.collection('members').doc(uid).set({
+        prenom: prenom,
+        email: email,
+        role: 'Membre',
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
 
-      currentUserData = { prenom, role };
+      currentUserData = { prenom, role: 'Membre' };
       setupHomeScreen();
     } catch (e) {
       showToast('Erreur : ' + e.message);
@@ -474,7 +510,6 @@
     document.getElementById('role-display').textContent = currentUserData.role;
     document.getElementById('code-display').textContent = 'Code: ' + currentInviteCode;
 
-    // Afficher le module d'administration si Président
     if (currentUserData.role === 'Président') {
       document.getElementById('btn-admin-module').style.display = 'flex';
     } else {
