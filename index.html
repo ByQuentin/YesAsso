@@ -174,7 +174,7 @@
 
 <div class="phone">
 
-  <!-- Ecran d'authentification (Créer / Rejoindre) -->
+  <!-- Ecran d'authentification (Rejoindre / Créer) -->
   <div class="screen auth-screen active" id="screen-auth">
     <div class="asso-icon">👥</div>
     
@@ -186,12 +186,16 @@
     <!-- Formulaire Rejoindre -->
     <div id="form-join" style="width:100%;">
       <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Code d'invitation (ex: YES-8K3P)</div>
+        <div class="field-label"><span class="req">✦</span> Code d'invitation</div>
         <input class="field-input" type="text" placeholder="YES-XXXX" id="join-code" style="text-transform:uppercase;">
       </div>
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Ton prénom</div>
         <input class="field-input" type="text" placeholder="Marie" id="join-prenom">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Adresse e-mail</div>
+        <input class="field-input" type="email" placeholder="marie@exemple.fr" id="join-email">
       </div>
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Mot de passe</div>
@@ -209,6 +213,10 @@
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Ton prénom (Président)</div>
         <input class="field-input" type="text" placeholder="Alexandre" id="create-prenom">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Adresse e-mail</div>
+        <input class="field-input" type="email" placeholder="president@exemple.fr" id="create-email">
       </div>
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Mot de passe</div>
@@ -372,15 +380,12 @@
   async function handleCreateAsso() {
     const assoName = document.getElementById('create-asso-name').value.trim();
     const prenom = document.getElementById('create-prenom').value.trim();
+    const email = document.getElementById('create-email').value.trim();
     const mdp = document.getElementById('create-mdp').value.trim();
 
-    if (!assoName || !prenom || !mdp) { showToast('Remplis tous les champs'); return; }
+    if (!assoName || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
 
     try {
-      const cleanName = prenom.toLowerCase().replace(/\s+/g, '');
-      const cleanPass = mdp.slice(-4);
-      const email = `${cleanName}-${cleanPass}@yesasso.local`;
-
       const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
       const uid = userCred.user.uid;
       const inviteCode = generateInviteCode();
@@ -398,6 +403,7 @@
       // Créer le membre Président
       await assoRef.collection('members').doc(uid).set({
         prenom: prenom,
+        email: email,
         role: 'Président',
         joinedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -405,7 +411,13 @@
       currentUserData = { prenom, role: 'Président' };
       setupHomeScreen();
     } catch (e) {
-      showToast('Erreur création : ' + e.message);
+      if (e.code === 'auth/email-already-in-use') {
+        showToast('Cet e-mail est déjà utilisé.');
+      } else if (e.code === 'auth/weak-password') {
+        showToast('Mot de passe trop court (6 caract. min).');
+      } else {
+        showToast('Erreur : ' + e.message);
+      }
     }
   }
 
@@ -413,9 +425,10 @@
   async function handleJoin() {
     const code = document.getElementById('join-code').value.trim().toUpperCase();
     const prenom = document.getElementById('join-prenom').value.trim();
+    const email = document.getElementById('join-email').value.trim();
     const mdp = document.getElementById('join-mdp').value.trim();
 
-    if (!code || !prenom || !mdp) { showToast('Remplis tous les champs'); return; }
+    if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
 
     try {
       // Trouver l'association correspondant au code
@@ -426,10 +439,6 @@
       currentAssoId = assoDoc.id;
       currentInviteCode = code;
 
-      const cleanName = prenom.toLowerCase().replace(/\s+/g, '');
-      const cleanPass = mdp.slice(-4);
-      const email = `${cleanName}-${cleanPass}@yesasso.local`;
-
       let userCred;
       try {
         userCred = await auth.signInWithEmailAndPassword(email, mdp);
@@ -439,7 +448,7 @@
 
       const uid = userCred.user.uid;
 
-      // Vérifier si le rôle existe déjà
+      // Vérifier si le membre existe déjà dans cette asso
       const memberDoc = await assoDoc.ref.collection('members').doc(uid).get();
       let role = 'Membre';
       if (memberDoc.exists) {
@@ -447,6 +456,7 @@
       } else {
         await assoDoc.ref.collection('members').doc(uid).set({
           prenom: prenom,
+          email: email,
           role: role,
           joinedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -455,7 +465,7 @@
       currentUserData = { prenom, role };
       setupHomeScreen();
     } catch (e) {
-      showToast('Erreur d\'accès : ' + e.message);
+      showToast('Erreur : ' + e.message);
     }
   }
 
@@ -504,7 +514,7 @@
           <div class="member-card">
             <div class="member-info">
               <span class="member-name">${member.prenom}</span>
-              <span class="member-role-text">Rôle actuel: ${member.role}</span>
+              <span class="member-role-text">${member.email || ''} · ${member.role}</span>
             </div>
             ${currentUserData.role === 'Président' ? `
               <select class="field-select" style="width: auto; padding: 6px 10px;" onchange="updateRole('${memberId}', this.value)">
