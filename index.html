@@ -67,7 +67,6 @@
 
     .field-group { width: 100%; margin-bottom: 14px; }
     .field-label { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-    .field-label .req { color: var(--blue-light); font-size: 15px; }
     .field-input, .field-select {
       width: 100%; background: var(--card2); border: 1.5px solid var(--border); border-radius: 14px;
       padding: 12px 16px; font-size: 15px; font-family: inherit; color: var(--text); outline: none;
@@ -159,809 +158,507 @@
     .event-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
     .event-meta { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
     .event-dot { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; }
+    .section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
     .add-btn {
       width: 36px; height: 36px; background: var(--blue); border: none; border-radius: 50%;
       color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
   </style>
 </head>
 <body>
 
-  <!-- TES ÉLÉMENTS HTML DU CORPS DE LA PAGE (PHONE, SCREENS, ETC.) ICI -->
+  <div class="phone">
+    
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast">Notification</div>
 
-  <!-- 1. CHARGEMENT DES SCRIPTS FIREBASE D'ABORD -->
+    <!-- 1. ÉCRAN AUTHENTIFICATION -->
+    <div id="screen-auth" class="screen active auth-screen">
+      <div class="asso-icon">👥</div>
+      <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">YesAsso</h1>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 24px; text-align: center;">Gestion collaborative simplifiée</p>
+
+      <div class="auth-tabs">
+        <div id="tab-login" class="auth-tab" onclick="switchTab('login')">Se connecter</div>
+        <div id="tab-join" class="auth-tab" onclick="switchTab('join')">Rejoindre</div>
+        <div id="tab-create" class="auth-tab active" onclick="switchTab('create')">Créer Asso</div>
+      </div>
+
+      <!-- Formulaire Connexion -->
+      <div id="form-login" style="display: none; width: 100%;">
+        <div class="field-group">
+          <label class="field-label">Adresse e-mail</label>
+          <input type="email" id="login-email" class="field-input" placeholder="ton@email.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Mot de passe</label>
+          <input type="password" id="login-mdp" class="field-input" placeholder="••••••••">
+        </div>
+        <button class="btn-action" onclick="handleLogin()">Se connecter →</button>
+      </div>
+
+      <!-- Formulaire Rejoindre -->
+      <div id="form-join" style="display: none; width: 100%;">
+        <div class="field-group">
+          <label class="field-label">Code d'invitation</label>
+          <input type="text" id="join-code" class="field-input" placeholder="EX: YES-XXXX">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Ton prénom</label>
+          <input type="text" id="join-prenom" class="field-input" placeholder="Prénom">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Adresse e-mail</label>
+          <input type="email" id="join-email" class="field-input" placeholder="ton@email.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Mot de passe</label>
+          <input type="password" id="join-mdp" class="field-input" placeholder="••••••••">
+        </div>
+        <button class="btn-action" onclick="handleJoin()">Rejoindre l'asso →</button>
+      </div>
+
+      <!-- Formulaire Créer Asso -->
+      <div id="form-create" style="display: block; width: 100%;">
+        <div class="field-group">
+          <label class="field-label">Nom de l'association</label>
+          <input type="text" id="create-asso-name" class="field-input" placeholder="Nom de l'asso">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Ton prénom (Président)</label>
+          <input type="text" id="create-prenom" class="field-input" placeholder="Prénom">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Adresse e-mail</label>
+          <input type="email" id="create-email" class="field-input" placeholder="ton@email.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Mot de passe</label>
+          <input type="password" id="create-mdp" class="field-input" placeholder="••••••••">
+        </div>
+        <button class="btn-action" onclick="handleCreateAsso()">Créer Asso & Devenir Président →</button>
+      </div>
+
+      <div class="ad-banner" style="position: absolute; bottom: 0; left: 0; right: 0;">
+        <span class="ad-badge">PUB</span> Publicité discrète — jamais intrusive
+      </div>
+    </div>
+
+
+    <!-- 2. ÉCRAN ACCUEIL (HOME) -->
+    <div id="screen-home" class="screen">
+      <div class="topbar">
+        <h1>Tableau de bord</h1>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="role-badge" id="role-display">Président</span>
+          <div class="avatar" id="avatar-initials">BQ</div>
+        </div>
+      </div>
+
+      <div class="scroll-zone home-scroll">
+        <!-- CARTE INFOS ASSOCIATION -->
+        <div class="asso-header">
+          <div>
+            <div class="asso-title" id="home-asso-title">Mon Association</div>
+            <div class="asso-sub" id="home-asso-sub">Espace collaboratif</div>
+          </div>
+          <div class="code-badge" onclick="copyCode()">
+            <span id="code-display">Code: ----</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </div>
+        </div>
+
+        <!-- GRILLE DES MODULES -->
+        <div class="section-title">Modules</div>
+        <div class="modules-grid">
+          <div class="module-btn" onclick="showScreen('agenda')">
+            <div class="module-icon agenda">📅</div>
+            <div class="module-label">Agenda</div>
+          </div>
+          <div class="module-btn" onclick="showScreen('ideas')">
+            <div class="module-icon ideas">💡</div>
+            <div class="module-label">Boîte à idées</div>
+          </div>
+          <div class="module-btn" onclick="showScreen('reports')">
+            <div class="module-icon reports">📊</div>
+            <div class="module-label">Trésorerie</div>
+          </div>
+          <div class="module-btn" onclick="showScreen('account')">
+            <div class="module-icon account">👥</div>
+            <div class="module-label">Membres</div>
+          </div>
+          <!-- Visible uniquement pour le président -->
+          <div class="module-btn" id="btn-admin-module" onclick="showScreen('admin')" style="display: none;">
+            <div class="module-icon admin">⚙️</div>
+            <div class="module-label">Admin</div>
+          </div>
+        </div>
+
+        <!-- SECTION PROCHAINS ÉVÉNEMENTS -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="section-title" style="margin: 0;">Prochains événements</div>
+          <button class="add-btn" onclick="openEventModal()">+</button>
+        </div>
+        
+        <div id="events-list"></div>
+      </div>
+
+      <div class="ad-banner">
+        <span class="ad-badge">PUB</span> Publicité discrète — jamais intrusive
+      </div>
+    </div>
+
+
+    <!-- 3. ÉCRAN AGENDA -->
+    <div id="screen-agenda" class="screen">
+      <div class="topbar">
+        <button class="back-btn" onclick="showScreen('home')">←</button>
+        <h1>Agenda</h1>
+        <button class="add-btn" onclick="openEventModal()">+</button>
+      </div>
+      <div class="scroll-zone" style="padding-top: 10px;" id="agenda-full-list"></div>
+      <div class="ad-banner">
+        <span class="ad-badge">PUB</span> Publicité discrète — jamais intrusive
+      </div>
+    </div>
+
+
+    <!-- 4. ÉCRAN MEMBRES -->
+    <div id="screen-account" class="screen">
+      <div class="topbar">
+        <button class="back-btn" onclick="showScreen('home')">←</button>
+        <h1>Membres de l'asso</h1>
+        <div style="width: 36px;"></div>
+      </div>
+      <div class="scroll-zone" style="padding-top: 10px;" id="members-list"></div>
+      <div class="ad-banner">
+        <span class="ad-badge">PUB</span> Publicité discrète — jamais intrusive
+      </div>
+    </div>
+
+
+    <!-- ÉCRANS PLACEHOLDERS (IDÉES / TRÉSORERIE / ADMIN) -->
+    <div id="screen-ideas" class="screen"><div class="topbar"><button class="back-btn" onclick="showScreen('home')">←</button><h1>Boîte à idées</h1></div><div class="scroll-zone"><p style="color:var(--muted);text-align:center;padding:40px;">Bientôt disponible...</p></div><div class="ad-banner"><span class="ad-badge">PUB</span> Publicité discrète</div></div>
+    <div id="screen-reports" class="screen"><div class="topbar"><button class="back-btn" onclick="showScreen('home')">←</button><h1>Trésorerie</h1></div><div class="scroll-zone"><p style="color:var(--muted);text-align:center;padding:40px;">Bientôt disponible...</p></div><div class="ad-banner"><span class="ad-badge">PUB</span> Publicité discrète</div></div>
+    <div id="screen-admin" class="screen"><div class="topbar"><button class="back-btn" onclick="showScreen('home')">←</button><h1>Administration</h1></div><div class="scroll-zone"><p style="color:var(--muted);text-align:center;padding:40px;">Espace réservé au président.</p></div><div class="ad-banner"><span class="ad-badge">PUB</span> Publicité discrète</div></div>
+
+
+    <!-- MODALE AJOUT ÉVÉNEMENT -->
+    <div class="modal-overlay" id="modal-event">
+      <div class="modal-content">
+        <div class="modal-title">
+          <span>Nouvel événement</span>
+          <button class="modal-close" onclick="closeEventModal()">×</button>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Titre de l'événement</label>
+          <input type="text" id="event-title-input" class="field-input" placeholder="Ex: Assemblée Générale">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Lieu</label>
+          <input type="text" id="event-location-input" class="field-input" placeholder="Ex: Local de l'asso ou Visio">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Date et heure</label>
+          <input type="datetime-local" id="event-date-input" class="field-input">
+        </div>
+        <button class="btn-action" onclick="submitEvent()">Ajouter à l'agenda →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SCRIPTS FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-  <!-- 2. TON SCRIPT APPLICATIF ENSUITE -->
+  <!-- SCRIPT LOGIQUE APP -->
   <script>
-  // 1. Nettoyage SW
-  if ('serviceWorker' in navigator) {
-    caches.keys().then(names => { for (let name of names) caches.delete(name); });
-  }
-
-  // 2. CONFIGURATION FIREBASE
-  const firebaseConfig = {
-    apiKey: "AIzaSyCDzGsLuSHN8yl2p23YdeSGGNxkmYfinPc",
-    authDomain: "yesasso-b23c2.firebaseapp.com",
-    projectId: "yesasso-b23c2",
-    storageBucket: "yesasso-b23c2.firebasestorage.app",
-    messagingSenderId: "783342738476",
-    appId: "1:783342738476:web:6ed6ec8c77aa7a488c9354"
-  };
-
-  // Initialisation sécurisée
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-
-  // Obtenir les instances
-  function getAuth() {
-    return firebase.auth();
-  }
-  function getDb() {
-    return firebase.firestore();
-  }
-
-  // VARIABLES GLOBALES
-  let currentAssoId = null;
-  let currentUserData = null;
-  let currentInviteCode = null;
-
-  // NAVIGATION & TABS
-  function switchTab(type) {
-    document.getElementById('tab-login').classList.toggle('active', type === 'login');
-    document.getElementById('tab-join').classList.toggle('active', type === 'join');
-    document.getElementById('tab-create').classList.toggle('active', type === 'create');
-
-    document.getElementById('form-login').style.display = type === 'login' ? 'block' : 'none';
-    document.getElementById('form-join').style.display = type === 'join' ? 'block' : 'none';
-    document.getElementById('form-create').style.display = type === 'create' ? 'block' : 'none';
-  }
-
-  function showScreen(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + name).classList.add('active');
-  }
-
-  let toastTimer;
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    if (t) {
-      t.textContent = msg;
-      t.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
-    } else {
-      alert(msg);
+    if ('serviceWorker' in navigator) {
+      caches.keys().then(names => { for (let name of names) caches.delete(name); });
     }
-  }
 
-  function generateInviteCode() {
-    return 'YES-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-  }
+    const firebaseConfig = {
+      apiKey: "TA_VRAIE_CLE_API_ICI",
+      authDomain: "yesasso-b23c2.firebaseapp.com",
+      projectId: "yesasso-b23c2",
+      storageBucket: "yesasso-b23c2.firebasestorage.app",
+      messagingSenderId: "783342738476",
+      appId: "1:783342738476:web:6ed6ec8c77aa7a488c9354"
+    };
 
-  // FONCTIONS AUTHENTIFICATION
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
 
-  async function handleLogin() {
-    const email = document.getElementById('login-email').value.trim();
-    const mdp = document.getElementById('login-mdp').value.trim();
+    function getAuth() { return firebase.auth(); }
+    function getDb() { return firebase.firestore(); }
 
-    if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
+    let currentAssoId = null;
+    let currentUserData = null;
+    let currentInviteCode = null;
 
-    try {
-      const auth = getAuth();
-      const db = getDb();
-      const userCred = await auth.signInWithEmailAndPassword(email, mdp);
-      const uid = userCred.user.uid;
+    function switchTab(type) {
+      document.getElementById('tab-login').classList.toggle('active', type === 'login');
+      document.getElementById('tab-join').classList.toggle('active', type === 'join');
+      document.getElementById('tab-create').classList.toggle('active', type === 'create');
 
-      const snapshot = await db.collectionGroup('members').get();
-      let foundAsso = null;
-      let foundMemberData = null;
+      document.getElementById('form-login').style.display = type === 'login' ? 'block' : 'none';
+      document.getElementById('form-join').style.display = type === 'join' ? 'block' : 'none';
+      document.getElementById('form-create').style.display = type === 'create' ? 'block' : 'none';
+    }
 
-      snapshot.forEach(doc => {
-        if (doc.id === uid) {
-          foundMemberData = doc.data();
-          foundAsso = doc.ref.parent.parent;
-        }
-      });
+    function showScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + name).classList.add('active');
+    }
 
-      if (!foundAsso) {
-        showToast('Aucune association liée à ce compte');
-        return;
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if (t) {
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+      } else {
+        alert(msg);
       }
-
-      currentAssoId = foundAsso.id;
-      const assoDoc = await foundAsso.get();
-      currentInviteCode = assoDoc.data().inviteCode;
-      currentUserData = foundMemberData;
-
-      setupHomeScreen();
-    } catch (e) {
-      showToast('Erreur : ' + e.message);
-    }
-  }
-
-  async function handleCreateAsso() {
-    const assoName = document.getElementById('create-asso-name').value.trim();
-    const prenom = document.getElementById('create-prenom').value.trim();
-    const email = document.getElementById('create-email').value.trim();
-    const mdp = document.getElementById('create-mdp').value.trim();
-
-    if (!assoName || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
-
-    try {
-      const auth = getAuth();
-      const db = getDb();
-
-      const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
-      const uid = userCred.user.uid;
-      const inviteCode = generateInviteCode();
-
-      const assoRef = await db.collection('associations').add({
-        name: assoName,
-        inviteCode: inviteCode,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      currentAssoId = assoRef.id;
-      currentInviteCode = inviteCode;
-
-      await assoRef.collection('members').doc(uid).set({
-        prenom: prenom,
-        email: email,
-        role: 'Président',
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      currentUserData = { prenom, role: 'Président' };
-      setupHomeScreen();
-    } catch (e) {
-      showToast('Erreur : ' + e.message);
-    }
-  }
-
-  async function handleJoin() {
-    const code = document.getElementById('join-code').value.trim().toUpperCase();
-    const prenom = document.getElementById('join-prenom').value.trim();
-    const email = document.getElementById('join-email').value.trim();
-    const mdp = document.getElementById('join-mdp').value.trim();
-
-    if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
-
-    try {
-      const auth = getAuth();
-      const db = getDb();
-
-      const snapshot = await db.collection('associations').where('inviteCode', '==', code).get();
-      if (snapshot.empty) { showToast('Code d\'association invalide'); return; }
-
-      const assoDoc = snapshot.docs[0];
-      currentAssoId = assoDoc.id;
-      currentInviteCode = code;
-
-      const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
-      const uid = userCred.user.uid;
-
-      await assoDoc.ref.collection('members').doc(uid).set({
-        prenom: prenom,
-        email: email,
-        role: 'Membre',
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      currentUserData = { prenom, role: 'Membre' };
-      setupHomeScreen();
-    } catch (e) {
-      showToast('Erreur : ' + e.message);
-    }
-  }
-
-  // LOGIQUE HOME ET EVENEMENTS
-  function setupHomeScreen() {
-    document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
-    document.getElementById('role-display').textContent = currentUserData.role;
-    document.getElementById('code-display').textContent = 'Code: ' + currentInviteCode;
-
-    if (currentUserData.role === 'Président') {
-      document.getElementById('btn-admin-module').style.display = 'flex';
-    } else {
-      document.getElementById('btn-admin-module').style.display = 'none';
     }
 
-    loadAssociationInfo();
-    loadEvents();
-    loadMembers();
-    showScreen('home');
-  }
-
-  function copyCode() {
-    navigator.clipboard.writeText(currentInviteCode);
-    showToast('Code ' + currentInviteCode + ' copié !');
-  }
-
-  function loadAssociationInfo() {
-    getDb().collection('associations').doc(currentAssoId).onSnapshot(doc => {
-      if (doc.exists) {
-        document.getElementById('home-asso-title').textContent = doc.data().name;
-        document.getElementById('home-asso-sub').textContent = `Espace collaboratif`;
-      }
-    });
-  }
-
-  function loadMembers() {
-    getDb().collection('associations').doc(currentAssoId).collection('members').onSnapshot(snapshot => {
-      const list = document.getElementById('members-list');
-      list.innerHTML = '';
-      
-      snapshot.forEach(doc => {
-        const member = doc.data();
-        const memberId = doc.id;
-        
-        list.innerHTML += `
-          <div class="member-card">
-            <div class="member-info">
-              <span class="member-name">${member.prenom}</span>
-              <span class="member-role-text">${member.email || ''} · ${member.role}</span>
-            </div>
-            ${currentUserData.role === 'Président' ? `
-              <select class="field-select" style="width: auto; padding: 6px 10px;" onchange="updateRole('${memberId}', this.value)">
-                <option value="Membre" ${member.role === 'Membre' ? 'selected' : ''}>Membre</option>
-                <option value="Trésorier" ${member.role === 'Trésorier' ? 'selected' : ''}>Trésorier</option>
-                <option value="Secrétaire" ${member.role === 'Secrétaire' ? 'selected' : ''}>Secrétaire</option>
-                <option value="Président" ${member.role === 'Président' ? 'selected' : ''}>Président</option>
-              </select>
-            ` : ''}
-          </div>
-        `;
-      });
-    });
-  }
-
-  async function updateRole(memberId, newRole) {
-    try {
-      await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberId).update({
-        role: newRole
-      });
-      showToast('Rôle mis à jour !');
-    } catch (e) {
-      showToast('Erreur mise à jour rôle');
+    function generateInviteCode() {
+      return 'YES-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     }
-  }
 
-  function loadEvents() {
-    getDb().collection('associations').doc(currentAssoId).collection('events')
-      .orderBy('date', 'asc')
-      .onSnapshot(snapshot => {
-        const list = document.getElementById('events-list');
-        list.innerHTML = '';
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const mdp = document.getElementById('login-mdp').value.trim();
+      if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
 
-        if (snapshot.empty) {
-          list.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement prévu</div>';
-          return;
-        }
+      try {
+        const userCred = await getAuth().signInWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
+        const snapshot = await getDb().collectionGroup('members').get();
+        let foundAsso = null, foundMemberData = null;
 
         snapshot.forEach(doc => {
-          const item = doc.data();
-          const d = item.date ? item.date.toDate() : new Date();
-          const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
-          const day = d.getDate();
-          const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
+          if (doc.id === uid) {
+            foundMemberData = doc.data();
+            foundAsso = doc.ref.parent.parent;
+          }
+        });
 
+        if (!foundAsso) { showToast('Aucune association liée à ce compte'); return; }
+
+        currentAssoId = foundAsso.id;
+        const assoDoc = await foundAsso.get();
+        currentInviteCode = assoDoc.data().inviteCode;
+        currentUserData = foundMemberData;
+
+        setupHomeScreen();
+      } catch (e) {
+        showToast('Erreur : ' + e.message);
+      }
+    }
+
+    async function handleCreateAsso() {
+      const assoName = document.getElementById('create-asso-name').value.trim();
+      const prenom = document.getElementById('create-prenom').value.trim();
+      const email = document.getElementById('create-email').value.trim();
+      const mdp = document.getElementById('create-mdp').value.trim();
+
+      if (!assoName || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
+
+      try {
+        const userCred = await getAuth().createUserWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
+        const inviteCode = generateInviteCode();
+
+        const assoRef = await getDb().collection('associations').add({
+          name: assoName,
+          inviteCode: inviteCode,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        currentAssoId = assoRef.id;
+        currentInviteCode = inviteCode;
+
+        await assoRef.collection('members').doc(uid).set({
+          prenom: prenom,
+          email: email,
+          role: 'Président',
+          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        currentUserData = { prenom, role: 'Président' };
+        setupHomeScreen();
+      } catch (e) {
+        showToast('Erreur : ' + e.message);
+      }
+    }
+
+    async function handleJoin() {
+      const code = document.getElementById('join-code').value.trim().toUpperCase();
+      const prenom = document.getElementById('join-prenom').value.trim();
+      const email = document.getElementById('join-email').value.trim();
+      const mdp = document.getElementById('join-mdp').value.trim();
+
+      if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
+
+      try {
+        const snapshot = await getDb().collection('associations').where('inviteCode', '==', code).get();
+        if (snapshot.empty) { showToast('Code d\'association invalide'); return; }
+
+        const assoDoc = snapshot.docs[0];
+        currentAssoId = assoDoc.id;
+        currentInviteCode = code;
+
+        const userCred = await getAuth().createUserWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
+
+        await assoDoc.ref.collection('members').doc(uid).set({
+          prenom: prenom,
+          email: email,
+          role: 'Membre',
+          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        currentUserData = { prenom, role: 'Membre' };
+        setupHomeScreen();
+      } catch (e) {
+        showToast('Erreur : ' + e.message);
+      }
+    }
+
+    function setupHomeScreen() {
+      document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
+      document.getElementById('role-display').textContent = currentUserData.role;
+      document.getElementById('code-display').textContent = 'Code: ' + currentInviteCode;
+
+      document.getElementById('btn-admin-module').style.display = (currentUserData.role === 'Président') ? 'flex' : 'none';
+
+      loadAssociationInfo();
+      loadEvents();
+      loadMembers();
+      showScreen('home');
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(currentInviteCode);
+      showToast('Code ' + currentInviteCode + ' copié !');
+    }
+
+    function loadAssociationInfo() {
+      getDb().collection('associations').doc(currentAssoId).onSnapshot(doc => {
+        if (doc.exists) {
+          document.getElementById('home-asso-title').textContent = doc.data().name;
+          document.getElementById('home-asso-sub').textContent = `Espace collaboratif`;
+        }
+      });
+    }
+
+    function loadMembers() {
+      getDb().collection('associations').doc(currentAssoId).collection('members').onSnapshot(snapshot => {
+        const list = document.getElementById('members-list');
+        list.innerHTML = '';
+        
+        snapshot.forEach(doc => {
+          const member = doc.data();
+          const memberId = doc.id;
+          
           list.innerHTML += `
-            <div class="event-item">
-              <div class="event-date">
-                <div class="event-month">${month}</div>
-                <div class="event-day">${day}</div>
+            <div class="member-card">
+              <div class="member-info">
+                <span class="member-name">${member.prenom}</span>
+                <span class="member-role-text">${member.email || ''} · ${member.role}</span>
               </div>
-              <div class="event-info">
-                <div class="event-title">${item.title}</div>
-                <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
-              </div>
+              ${currentUserData.role === 'Président' ? `
+                <select class="field-select" style="width: auto; padding: 6px 10px;" onchange="updateRole('${memberId}', this.value)">
+                  <option value="Membre" ${member.role === 'Membre' ? 'selected' : ''}>Membre</option>
+                  <option value="Trésorier" ${member.role === 'Trésorier' ? 'selected' : ''}>Trésorier</option>
+                  <option value="Secrétaire" ${member.role === 'Secrétaire' ? 'selected' : ''}>Secrétaire</option>
+                  <option value="Président" ${member.role === 'Président' ? 'selected' : ''}>Président</option>
+                </select>
+              ` : ''}
             </div>
           `;
         });
       });
-  }
-
-  function openEventModal() { document.getElementById('modal-event').classList.add('active'); }
-  function closeEventModal() { document.getElementById('modal-event').classList.remove('active'); }
-
-  async function submitEvent() {
-    const title = document.getElementById('event-title-input').value.trim();
-    const location = document.getElementById('event-location-input').value.trim();
-    const dateValue = document.getElementById('event-date-input').value;
-
-    if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
-
-    try {
-      await getDb().collection('associations').doc(currentAssoId).collection('events').add({
-        title: title,
-        location: location || 'Non spécifié',
-        date: firebase.firestore.Timestamp.fromDate(new Date(dateValue))
-      });
-
-      closeEventModal();
-      document.getElementById('event-title-input').value = '';
-      document.getElementById('event-location-input').value = '';
-      document.getElementById('event-date-input').value = '';
-      showToast('Événement ajouté !');
-    } catch (e) {
-      showToast('Erreur d\'ajout d\'événement');
     }
-  }
-</script>
-</body>
-</html>
 
-<div class="phone">
-
-  <!-- Ecran d'authentification (Connexion / Rejoindre / Créer) -->
-  <div class="screen auth-screen active" id="screen-auth">
-    <div class="asso-icon">👥</div>
-    
-    <div class="auth-tabs">
-      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Se connecter</div>
-      <div class="auth-tab" id="tab-join" onclick="switchTab('join')">Rejoindre</div>
-      <div class="auth-tab" id="tab-create" onclick="switchTab('create')">Créer Asso</div>
-    </div>
-
-    <!-- Formulaire 1: Connexion -->
-    <div id="form-login" style="width:100%;">
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Adresse e-mail</div>
-        <input class="field-input" type="email" placeholder="ton-email@exemple.fr" id="login-email">
-      </div>
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Mot de passe</div>
-        <input class="field-input" type="password" placeholder="••••••••" id="login-mdp">
-      </div>
-      <button class="btn-action" onclick="handleLogin()">Connexion →</button>
-    </div>
-
-    <!-- Formulaire 2: Rejoindre avec un code -->
-    <div id="form-join" style="width:100%; display:none;">
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Code d'invitation</div>
-        <input class="field-input" type="text" placeholder="YES-XXXX" id="join-code" style="text-transform:uppercase;">
-      </div>
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Ton prénom</div>
-        <input class="field-input" type="text" placeholder="Marie" id="join-prenom">
-      </div>
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Adresse e-mail</div>
-        <input class="field-input" type="email" placeholder="marie@exemple.fr" id="join-email">
-      </div>
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Mot de passe</div>
-        <input class="field-input" type="password" placeholder="••••••••" id="join-mdp">
-      </div>
-      <button class="btn-action" onclick="handleJoin()">Créer mon compte & Rejoindre →</button>
-    </div>
-
-    <!-- Formulaire 3: Créer une asso -->
-    <div id="form-create" style="width:100%; display:none;">
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Nom de l'association</div>
-        <input class="field-input" type="text" placeholder="Nom de l'association" id="create-asso-name">
-      </div>
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Ton prénom (Président)</div>
-        <input class="field-input" type="text" placeholder="Ton prénom" id="create-prenom">
-      </div>
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Adresse e-mail</div>
-        <input class="field-input" type="email" placeholder="president@exemple.fr" id="create-email">
-      </div>
-      <div class="field-group">
-        <div class="field-label"><span class="req">✦</span> Mot de passe</div>
-        <input class="field-input" type="password" placeholder="••••••••" id="create-mdp">
-      </div>
-      <button class="btn-action" onclick="handleCreateAsso()">Créer Asso & Devenir Président →</button>
-    </div>
-
-    <div style="height: 20px;"></div>
-    <div class="ad-banner"><span class="ad-badge">Pub</span>Publicité discrète — jamais intrusive</div>
-  </div>
-
-  <!-- Ecran d'accueil -->
-  <div class="screen" id="screen-home">
-    <div class="topbar">
-      <div>
-        <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:2px;">Espace membre</div>
-        <div style="font-size:18px;font-weight:800;">YesAsso</div>
-      </div>
-      <div class="avatar" id="avatar-initials">--</div>
-    </div>
-
-    <div class="scroll-zone">
-      <div class="home-scroll">
-        <div class="asso-header">
-          <div>
-            <div class="asso-title" id="home-asso-title">Chargement...</div>
-            <div class="asso-sub" id="home-asso-sub">...</div>
-          </div>
-          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <div class="role-badge" id="role-display">Membre</div>
-            <div class="code-badge" onclick="copyCode()" id="code-display">Code: ----</div>
-          </div>
-        </div>
-
-        <p class="section-title">Modules</p>
-        <div class="modules-grid">
-          <button class="module-btn" onclick="showScreen('agenda')">
-            <div class="module-icon agenda">📅</div>
-            <div class="module-label">Agenda</div>
-          </button>
-          <button class="module-btn" onclick="showToast('Boîte à idées — disponible très bientôt !')">
-            <div class="module-icon ideas">💡</div>
-            <div class="module-label">Boîte à idées</div>
-          </button>
-          <button class="module-btn" onclick="showToast('Comptes-rendus — disponible très bientôt !')">
-            <div class="module-icon reports">📄</div>
-            <div class="module-label">Comptes-rendus</div>
-          </button>
-          <button class="module-btn" onclick="showToast('Compte bancaire — disponible très bientôt !')">
-            <div class="module-icon account">💶</div>
-            <div class="module-label">Compte</div>
-          </button>
-          <button class="module-btn" id="btn-admin-module" style="display:none; grid-column: span 2;" onclick="showScreen('members')">
-            <div class="module-icon admin">⚙️</div>
-            <div class="module-label">Gestion des Membres & Rôles</div>
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="ad-banner"><span class="ad-badge">Pub</span>Supprimer les publicités — Achat unique 2,99 €</div>
-  </div>
-
-  <!-- Ecran de Gestion des Membres -->
-  <div class="screen" id="screen-members">
-    <div class="topbar">
-      <button class="back-btn" onclick="showScreen('home')">‹</button>
-      <h1>Membres & Rôles</h1>
-      <div></div>
-    </div>
-    <div class="scroll-zone">
-      <p class="section-title">Liste des membres</p>
-      <div id="members-list"></div>
-    </div>
-  </div>
-
-  <!-- Ecran Agenda -->
-  <div class="screen" id="screen-agenda">
-    <div class="topbar">
-      <button class="back-btn" onclick="showScreen('home')">‹</button>
-      <h1>Agenda</h1>
-      <button class="add-btn" onclick="openEventModal()">+</button>
-    </div>
-    <div class="scroll-zone">
-      <div style="padding: 0 0 16px;">
-        <p class="section-title">Événements à venir</p>
-        <div id="events-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modale d'ajout d'événement -->
-  <div class="modal-overlay" id="modal-event">
-    <div class="modal-content">
-      <div class="modal-title">
-        <span>Nouvel événement</span>
-        <button class="modal-close" onclick="closeEventModal()">✕</button>
-      </div>
-      <div class="field-group">
-        <div class="field-label">Titre</div>
-        <input class="field-input" type="text" id="event-title-input" placeholder="Entraînement / Réunion">
-      </div>
-      <div class="field-group">
-        <div class="field-label">Lieu</div>
-        <input class="field-input" type="text" id="event-location-input" placeholder="Stade municipal">
-      </div>
-      <div class="field-group">
-        <div class="field-label">Date et Heure</div>
-        <input class="field-input" type="datetime-local" id="event-date-input">
-      </div>
-      <button class="btn-action" onclick="submitEvent()">Ajouter l'événement</button>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-</div>
-
-<script>
-  // 1. INITIALISATION DE FIREBASE (Déclaré en premier !)
-  const firebaseConfig = {
-    authDomain: "yesasso-b23c2.firebaseapp.com",
-    projectId: "yesasso-b23c2",
-    storageBucket: "yesasso-b23c2.firebasestorage.app",
-    messagingSenderId: "783342738476",
-    appId: "1:783342738476:web:6ed6ec8c77aa7a488c9354"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  // 2. VARIABLES GLOBALES
-  let currentAssoId = null;
-  let currentUserData = null;
-  let currentInviteCode = null;
-
-  // 3. FONCTIONS UTILITAIRES DE L'INTERFACE
-  function switchTab(type) {
-    document.getElementById('tab-login').classList.toggle('active', type === 'login');
-    document.getElementById('tab-join').classList.toggle('active', type === 'join');
-    document.getElementById('tab-create').classList.toggle('active', type === 'create');
-
-    document.getElementById('form-login').style.display = type === 'login' ? 'block' : 'none';
-    document.getElementById('form-join').style.display = type === 'join' ? 'block' : 'none';
-    document.getElementById('form-create').style.display = type === 'create' ? 'block' : 'none';
-  }
-
-  function showScreen(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + name).classList.add('active');
-  }
-
-  let toastTimer;
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
-  }
-
-  function generateInviteCode() {
-    return 'YES-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-  }
-
-  // 4. ACTION : SE CONNECTER A UN COMPTE EXISTANT
-  async function handleLogin() {
-    const email = document.getElementById('login-email').value.trim();
-    const mdp = document.getElementById('login-mdp').value.trim();
-
-    if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
-
-    try {
-      const userCred = await auth.signInWithEmailAndPassword(email, mdp);
-      const uid = userCred.user.uid;
-
-      const snapshot = await db.collectionGroup('members').get();
-      let foundAsso = null;
-      let foundMemberData = null;
-
-      snapshot.forEach(doc => {
-        if (doc.id === uid) {
-          foundMemberData = doc.data();
-          foundAsso = doc.ref.parent.parent;
-        }
-      });
-
-      if (!foundAsso) {
-        showToast('Aucune association liée à ce compte');
-        return;
+    async function updateRole(memberId, newRole) {
+      try {
+        await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberId).update({ role: newRole });
+        showToast('Rôle mis à jour !');
+      } catch (e) {
+        showToast('Erreur mise à jour rôle');
       }
-
-      currentAssoId = foundAsso.id;
-      const assoDoc = await foundAsso.get();
-      currentInviteCode = assoDoc.data().inviteCode;
-      currentUserData = foundMemberData;
-
-      setupHomeScreen();
-    } catch (e) {
-      showToast('Erreur de connexion : ' + e.message);
-    }
-  }
-
-  // 5. ACTION : CRÉER UNE ASSO ET DEVENIR PRÉSIDENT
-  async function handleCreateAsso() {
-    const assoName = document.getElementById('create-asso-name').value.trim();
-    const prenom = document.getElementById('create-prenom').value.trim();
-    const email = document.getElementById('create-email').value.trim();
-    const mdp = document.getElementById('create-mdp').value.trim();
-
-    if (!assoName || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
-
-    try {
-      const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
-      const uid = userCred.user.uid;
-      const inviteCode = generateInviteCode();
-
-      const assoRef = await db.collection('associations').add({
-        name: assoName,
-        inviteCode: inviteCode,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      currentAssoId = assoRef.id;
-      currentInviteCode = inviteCode;
-
-      await assoRef.collection('members').doc(uid).set({
-        prenom: prenom,
-        email: email,
-        role: 'Président',
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      currentUserData = { prenom, role: 'Président' };
-      setupHomeScreen();
-    } catch (e) {
-      showToast('Erreur : ' + e.message);
-    }
-  }
-
-  // 6. ACTION : REJOINDRE AVEC UN CODE D'INVITATION
-  async function handleJoin() {
-    const code = document.getElementById('join-code').value.trim().toUpperCase();
-    const prenom = document.getElementById('join-prenom').value.trim();
-    const email = document.getElementById('join-email').value.trim();
-    const mdp = document.getElementById('join-mdp').value.trim();
-
-    if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
-
-    try {
-      const snapshot = await db.collection('associations').where('inviteCode', '==', code).get();
-      if (snapshot.empty) { showToast('Code d\'association invalide'); return; }
-
-      const assoDoc = snapshot.docs[0];
-      currentAssoId = assoDoc.id;
-      currentInviteCode = code;
-
-      const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
-      const uid = userCred.user.uid;
-
-      await assoDoc.ref.collection('members').doc(uid).set({
-        prenom: prenom,
-        email: email,
-        role: 'Membre',
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      currentUserData = { prenom, role: 'Membre' };
-      setupHomeScreen();
-    } catch (e) {
-      showToast('Erreur : ' + e.message);
-    }
-  }
-
-  // 7. CHARGEMENT DE L'ÉCRAN PRINCIPAL
-  function setupHomeScreen() {
-    document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
-    document.getElementById('role-display').textContent = currentUserData.role;
-    document.getElementById('code-display').textContent = 'Code: ' + currentInviteCode;
-
-    if (currentUserData.role === 'Président') {
-      document.getElementById('btn-admin-module').style.display = 'flex';
-    } else {
-      document.getElementById('btn-admin-module').style.display = 'none';
     }
 
-    loadAssociationInfo();
-    loadEvents();
-    loadMembers();
-    showScreen('home');
-  }
+    function loadEvents() {
+      getDb().collection('associations').doc(currentAssoId).collection('events')
+        .orderBy('date', 'asc')
+        .onSnapshot(snapshot => {
+          const list = document.getElementById('events-list');
+          const agendaList = document.getElementById('agenda-full-list');
+          
+          let htmlContent = '';
+          if (snapshot.empty) {
+            htmlContent = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement prévu</div>';
+          } else {
+            snapshot.forEach(doc => {
+              const item = doc.data();
+              const d = item.date ? item.date.toDate() : new Date();
+              const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
+              const day = d.getDate();
+              const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
 
-  function copyCode() {
-    navigator.clipboard.writeText(currentInviteCode);
-    showToast('Code ' + currentInviteCode + ' copié !');
-  }
-
-  function loadAssociationInfo() {
-    db.collection('associations').doc(currentAssoId).onSnapshot(doc => {
-      if (doc.exists) {
-        document.getElementById('home-asso-title').textContent = doc.data().name;
-        document.getElementById('home-asso-sub').textContent = `Espace collaboratif`;
-      }
-    });
-  }
-
-  function loadMembers() {
-    db.collection('associations').doc(currentAssoId).collection('members').onSnapshot(snapshot => {
-      const list = document.getElementById('members-list');
-      list.innerHTML = '';
-      
-      snapshot.forEach(doc => {
-        const member = doc.data();
-        const memberId = doc.id;
-        
-        list.innerHTML += `
-          <div class="member-card">
-            <div class="member-info">
-              <span class="member-name">${member.prenom}</span>
-              <span class="member-role-text">${member.email || ''} · ${member.role}</span>
-            </div>
-            ${currentUserData.role === 'Président' ? `
-              <select class="field-select" style="width: auto; padding: 6px 10px;" onchange="updateRole('${memberId}', this.value)">
-                <option value="Membre" ${member.role === 'Membre' ? 'selected' : ''}>Membre</option>
-                <option value="Trésorier" ${member.role === 'Trésorier' ? 'selected' : ''}>Trésorier</option>
-                <option value="Secrétaire" ${member.role === 'Secrétaire' ? 'selected' : ''}>Secrétaire</option>
-                <option value="Président" ${member.role === 'Président' ? 'selected' : ''}>Président</option>
-              </select>
-            ` : ''}
-          </div>
-        `;
-      });
-    });
-  }
-
-  async function updateRole(memberId, newRole) {
-    try {
-      await db.collection('associations').doc(currentAssoId).collection('members').doc(memberId).update({
-        role: newRole
-      });
-      showToast('Rôle mis à jour !');
-    } catch (e) {
-      showToast('Erreur mise à jour rôle');
-    }
-  }
-
-  function loadEvents() {
-    db.collection('associations').doc(currentAssoId).collection('events')
-      .orderBy('date', 'asc')
-      .onSnapshot(snapshot => {
-        const list = document.getElementById('events-list');
-        list.innerHTML = '';
-
-        if (snapshot.empty) {
-          list.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement prévu</div>';
-          return;
-        }
-
-        snapshot.forEach(doc => {
-          const item = doc.data();
-          const d = item.date ? item.date.toDate() : new Date();
-          const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
-          const day = d.getDate();
-          const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
-
-          list.innerHTML += `
-            <div class="event-item">
-              <div class="event-date">
-                <div class="event-month">${month}</div>
-                <div class="event-day">${day}</div>
-              </div>
-              <div class="event-info">
-                <div class="event-title">${item.title}</div>
-                <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
-              </div>
-            </div>
-          `;
+              htmlContent += `
+                <div class="event-item">
+                  <div class="event-date">
+                    <div class="event-month">${month}</div>
+                    <div class="event-day">${day}</div>
+                  </div>
+                  <div class="event-info">
+                    <div class="event-title">${item.title}</div>
+                    <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
+                  </div>
+                </div>
+              `;
+            });
+          }
+          list.innerHTML = htmlContent;
+          agendaList.innerHTML = htmlContent;
         });
-      });
-  }
-
-  function openEventModal() { document.getElementById('modal-event').classList.add('active'); }
-  function closeEventModal() { document.getElementById('modal-event').classList.remove('active'); }
-
-  async function submitEvent() {
-    const title = document.getElementById('event-title-input').value.trim();
-    const location = document.getElementById('event-location-input').value.trim();
-    const dateValue = document.getElementById('event-date-input').value;
-
-    if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
-
-    try {
-      await db.collection('associations').doc(currentAssoId).collection('events').add({
-        title: title,
-        location: location || 'Non spécifié',
-        date: firebase.firestore.Timestamp.fromDate(new Date(dateValue))
-      });
-
-      closeEventModal();
-      document.getElementById('event-title-input').value = '';
-      document.getElementById('event-location-input').value = '';
-      document.getElementById('event-date-input').value = '';
-      showToast('Événement ajouté !');
-    } catch (e) {
-      showToast('Erreur d\'ajout d\'événement');
     }
-  }
-</script>
+
+    function openEventModal() { document.getElementById('modal-event').classList.add('active'); }
+    function closeEventModal() { document.getElementById('modal-event').classList.remove('active'); }
+
+    async function submitEvent() {
+      const title = document.getElementById('event-title-input').value.trim();
+      const location = document.getElementById('event-location-input').value.trim();
+      const dateValue = document.getElementById('event-date-input').value;
+
+      if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
+
+      try {
+        await getDb().collection('associations').doc(currentAssoId).collection('events').add({
+          title: title,
+          location: location || 'Non spécifié',
+          date: firebase.firestore.Timestamp.fromDate(new Date(dateValue))
+        });
+
+        closeEventModal();
+        document.getElementById('event-title-input').value = '';
+        document.getElementById('event-location-input').value = '';
+        document.getElementById('event-date-input').value = '';
+        showToast('Événement ajouté !');
+      } catch (e) {
+        showToast('Erreur d\'ajout d\'événement');
+      }
+    }
+  </script>
 </body>
 </html>
