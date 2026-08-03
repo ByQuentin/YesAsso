@@ -678,17 +678,41 @@ function loadEvents() {
       }
     }
 
-    async function handleLogout() {
+async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const mdp = document.getElementById('login-mdp').value.trim();
+      if (!email || !mdp) { showToast('Entre ton e-mail et ton mot de passe'); return; }
+
       try {
-        await getAuth().signOut();
-        currentAssoId = null;
-        currentUserData = null;
-        currentInviteCode = null;
-        showScreen('auth');
-        showToast('Déconnexion réussie');
-        window.location.reload();
+        const userCred = await getAuth().signInWithEmailAndPassword(email, mdp);
+        const uid = userCred.user.uid;
+
+        // Recherche directe par email dans les associations pour éviter le blocage du collectionGroup
+        const assoSnapshot = await getDb().collection('associations').get();
+        let foundAsso = null, foundMemberData = null;
+
+        for (const assoDoc of assoSnapshot.docs) {
+          const memberDoc = await assoDoc.ref.collection('members').doc(uid).get();
+          if (memberDoc.exists) {
+            foundAsso = assoDoc;
+            foundMemberData = memberDoc.data();
+            break;
+          }
+        }
+
+        if (!foundAsso) { 
+          showToast('Aucune association liée à ce compte'); 
+          return; 
+        }
+
+        currentAssoId = foundAsso.id;
+        currentInviteCode = foundAsso.data().inviteCode;
+        currentUserData = foundMemberData;
+
+        setupHomeScreen();
       } catch (e) {
-        showToast('Erreur lors de la déconnexion');
+        console.error("Erreur de connexion :", e);
+        showToast('Erreur : ' + e.message);
       }
     }
 
