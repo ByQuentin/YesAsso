@@ -565,14 +565,22 @@
       });
     }
 
-    function loadMembers() {
+function loadMembers() {
       getDb().collection('associations').doc(currentAssoId).collection('members').onSnapshot(snapshot => {
         const list = document.getElementById('members-list');
         list.innerHTML = '';
         
         snapshot.forEach(doc => {
           const member = doc.data();
-          const memberId = doc.id;
+          const memberId = doc.id; // L'UID du membre est l'ID du document
+          
+          const isCurrentUserPresident = (currentUserData && currentUserData.role === 'Président');
+          const isSelf = (memberId === getAuth().currentUser.uid);
+
+          let kickButtonHtml = '';
+          if (isCurrentUserPresident && !isSelf) {
+            kickButtonHtml = `<button onclick="kickMember('${memberId}', '${member.prenom}')" style="background:var(--danger); color:white; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700;">Virer</button>`;
+          }
           
           list.innerHTML += `
             <div class="member-card">
@@ -580,14 +588,17 @@
                 <span class="member-name">${member.prenom}</span>
                 <span class="member-role-text">${member.email || ''} · ${member.role}</span>
               </div>
-              ${currentUserData.role === 'Président' ? `
-                <select class="field-select" style="width: auto; padding: 6px 10px;" onchange="updateRole('${memberId}', this.value)">
-                  <option value="Membre" ${member.role === 'Membre' ? 'selected' : ''}>Membre</option>
-                  <option value="Trésorier" ${member.role === 'Trésorier' ? 'selected' : ''}>Trésorier</option>
-                  <option value="Secrétaire" ${member.role === 'Secrétaire' ? 'selected' : ''}>Secrétaire</option>
-                  <option value="Président" ${member.role === 'Président' ? 'selected' : ''}>Président</option>
-                </select>
-              ` : ''}
+              <div style="display: flex; align-items: center; gap: 8px;">
+                ${currentUserData.role === 'Président' && !isSelf ? `
+                  <select class="field-select" style="width: auto; padding: 6px 10px;" onchange="updateRole('${memberId}', this.value)">
+                    <option value="Membre" ${member.role === 'Membre' ? 'selected' : ''}>Membre</option>
+                    <option value="Trésorier" ${member.role === 'Trésorier' ? 'selected' : ''}>Trésorier</option>
+                    <option value="Secrétaire" ${member.role === 'Secrétaire' ? 'selected' : ''}>Secrétaire</option>
+                    <option value="Président" ${member.role === 'Président' ? 'selected' : ''}>Président</option>
+                  </select>
+                ` : ''}
+                ${kickButtonHtml}
+              </div>
             </div>
           `;
         });
@@ -758,14 +769,8 @@ async function handleLogin() {
       });
 
 async function kickMember(memberUid, memberName) {
-      // Vérification de sécurité côté front : est-ce que l'utilisateur actuel est le président ?
       if (!currentUserData || currentUserData.role !== 'Président') {
         showToast('Action réservée au président');
-        return;
-      }
-
-      if (memberUid === getAuth().currentUser.uid) {
-        showToast('Tu ne peux pas te supprimer toi-même !');
         return;
       }
 
@@ -776,7 +781,6 @@ async function kickMember(memberUid, memberName) {
       try {
         await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberUid).delete();
         showToast('Membre exclu avec succès');
-        // La liste des membres se mettra à jour toute seule si tu utilises un onSnapshot
       } catch (e) {
         console.error("Erreur lors de l'exclusion du membre :", e);
         showToast('Erreur lors de l\'exclusion');
