@@ -17,7 +17,7 @@
       --bg: #0A0E1A; --card: #141929; --card2: #1C2340;
       --blue: #2563EB; --blue-light: #3B82F6; --green: #10B981;
       --text: #F8FAFC; --muted: #94A3B8; --border: #2A3050;
-      --danger: #EF4444; --ad-bg: #111827;
+      --danger: #EF4444; --ad-bg: #111827; --gold: #F59E0B;
     }
     body {
       font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
@@ -55,85 +55,78 @@
       background: var(--border); color: var(--muted); font-size: 9px; font-weight: 700;
       padding: 2px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .5px;
     }
-    .join-screen { align-items: center; justify-content: center; padding: 40px 28px 20px; }
+    .auth-screen { align-items: center; justify-content: center; padding: 30px 24px; overflow-y: auto; }
     .asso-icon {
       width: 72px; height: 72px; background: linear-gradient(135deg, var(--blue) 0%, #1D4ED8 100%);
       border-radius: 22px; display: flex; align-items: center; justify-content: center;
-      font-size: 32px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(37,99,235,.4);
+      font-size: 32px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(37,99,235,.4);
     }
-    .join-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; text-align: center; }
-    .join-asso-name { font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 4px; line-height: 1.2; }
-    .join-members { font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 36px; }
-    .join-members span { color: var(--green); font-weight: 600; }
-    .field-group { width: 100%; margin-bottom: 16px; }
-    .field-label { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .auth-tabs { display: flex; background: var(--card2); border-radius: 12px; padding: 4px; width: 100%; margin-bottom: 20px; border: 1px solid var(--border); }
+    .auth-tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all .2s; }
+    .auth-tab.active { background: var(--blue); color: #fff; }
+
+    .field-group { width: 100%; margin-bottom: 14px; }
+    .field-label { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
     .field-label .req { color: var(--blue-light); font-size: 15px; }
-    .field-input {
+    .field-input, .field-select {
       width: 100%; background: var(--card2); border: 1.5px solid var(--border); border-radius: 14px;
-      padding: 14px 16px; font-size: 15px; font-family: inherit; color: var(--text); outline: none;
+      padding: 12px 16px; font-size: 15px; font-family: inherit; color: var(--text); outline: none;
       transition: border-color .2s, box-shadow .2s;
     }
     .field-input::placeholder { color: var(--muted); }
-    .field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
-    .btn-join {
+    .field-input:focus, .field-select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
+    
+    .btn-action {
       width: 100%; margin-top: 8px; background: var(--blue); border: none; border-radius: 14px;
-      padding: 16px; font-size: 17px; font-weight: 700; font-family: inherit; color: #fff; cursor: pointer;
+      padding: 14px; font-size: 16px; font-weight: 700; font-family: inherit; color: #fff; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: background .15s, transform .1s, box-shadow .15s; box-shadow: 0 6px 20px rgba(37,99,235,.4);
     }
-    .btn-join:hover { background: var(--blue-light); transform: translateY(-1px); }
+    .btn-action:hover { background: var(--blue-light); transform: translateY(-1px); }
+
     .home-scroll { padding: 0 20px 16px; }
     .asso-header {
-      margin-bottom: 20px; padding: 16px; background: var(--card); border-radius: 18px;
+      margin-bottom: 16px; padding: 16px; background: var(--card); border-radius: 18px;
       border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;
     }
     .asso-title { font-size: 17px; font-weight: 700; }
     .asso-sub { font-size: 13px; color: var(--muted); }
+    .code-badge {
+      display: inline-flex; align-items: center; gap: 6px; background: rgba(37,99,235,.15);
+      border: 1px dashed var(--blue-light); color: var(--blue-light); font-size: 12px; font-weight: 700;
+      padding: 4px 10px; border-radius: 8px; cursor: pointer; width: fit-content;
+    }
     .role-badge {
       display: inline-flex; align-items: center; gap: 6px; background: rgba(16,185,129,.15);
       border: 1px solid rgba(16,185,129,.3); color: var(--green); font-size: 12px; font-weight: 700;
       padding: 4px 10px; border-radius: 8px; width: fit-content;
     }
     .role-badge::before { content: '●'; font-size: 8px; }
+
     .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .module-btn {
       background: var(--card2); border: 1.5px solid var(--border); border-radius: 20px;
-      padding: 22px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+      padding: 20px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px;
       cursor: pointer; transition: background .15s, border-color .2s, transform .1s;
       text-decoration: none; color: var(--text);
     }
     .module-btn:hover { background: #232B4A; border-color: var(--blue); }
-    .module-icon { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .module-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
     .module-icon.agenda   { background: rgba(37,99,235,.2); }
     .module-icon.ideas    { background: rgba(245,158,11,.2); }
     .module-icon.reports  { background: rgba(139,92,246,.2); }
     .module-icon.account  { background: rgba(16,185,129,.2); }
+    .module-icon.admin    { background: rgba(239,68,68,.2); }
     .module-label { font-size: 14px; font-weight: 700; text-align: center; }
-    .next-event {
-      background: linear-gradient(135deg, var(--blue) 0%, #1D4ED8 100%); border-radius: 18px;
-      padding: 16px 18px; cursor: pointer; box-shadow: 0 6px 20px rgba(37,99,235,.3); margin-bottom: 4px;
+
+    .member-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
     }
-    .next-event-label { font-size: 11px; font-weight: 700; opacity: .7; text-transform: uppercase; margin-bottom: 6px; }
-    .next-event-title { font-size: 18px; font-weight: 800; }
-    .next-event-sub { font-size: 13px; opacity: .8; margin-top: 3px; }
-    .agenda-scroll { padding: 0 20px 16px; }
-    .event-item {
-      background: var(--card); border: 1.5px solid var(--border); border-radius: 18px;
-      padding: 16px; display: flex; align-items: center; gap: 16px; margin-bottom: 10px; cursor: pointer;
-    }
-    .event-date { text-align: center; min-width: 44px; }
-    .event-month { font-size: 11px; font-weight: 700; color: var(--blue-light); text-transform: uppercase; }
-    .event-day { font-size: 28px; font-weight: 800; line-height: 1; }
-    .event-info { flex: 1; }
-    .event-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
-    .event-meta { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-    .event-dot { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; }
-    .event-chevron { color: var(--muted); font-size: 14px; }
-    .add-btn {
-      width: 36px; height: 36px; background: var(--blue); border: none; border-radius: 50%;
-      color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-    .section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
+    .member-info { display: flex; flex-direction: column; }
+    .member-name { font-weight: 700; font-size: 15px; }
+    .member-role-text { font-size: 12px; color: var(--muted); }
+
     .toast {
       position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
       background: #1E293B; border: 1px solid var(--border); color: var(--text); padding: 12px 20px;
@@ -142,7 +135,6 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* Modale de création d'événement */
     .modal-overlay {
       position: absolute; inset: 0; background: rgba(10, 14, 26, 0.85); backdrop-filter: blur(4px);
       display: none; align-items: flex-end; justify-content: center; z-index: 50;
@@ -155,6 +147,23 @@
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
     .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+    
+    .event-item {
+      background: var(--card); border: 1.5px solid var(--border); border-radius: 18px;
+      padding: 16px; display: flex; align-items: center; gap: 16px; margin-bottom: 10px;
+    }
+    .event-date { text-align: center; min-width: 44px; }
+    .event-month { font-size: 11px; font-weight: 700; color: var(--blue-light); text-transform: uppercase; }
+    .event-day { font-size: 28px; font-weight: 800; line-height: 1; }
+    .event-info { flex: 1; }
+    .event-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .event-meta { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .event-dot { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; }
+    .add-btn {
+      width: 36px; height: 36px; background: var(--blue); border: none; border-radius: 50%;
+      color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -164,31 +173,59 @@
 <body>
 
 <div class="phone">
-  <div class="screen join-screen active" id="screen-join">
+
+  <!-- Ecran d'authentification (Créer / Rejoindre) -->
+  <div class="screen auth-screen active" id="screen-auth">
     <div class="asso-icon">👥</div>
-    <div class="join-label">Rejoindre une association</div>
-    <div class="join-asso-name" id="asso-display-name">Association...</div>
-    <div class="join-members"><span id="asso-display-count">0</span> membres déjà inscrits</div>
-
-    <div class="field-group">
-      <div class="field-label"><span class="req">✦</span> Ton prénom</div>
-      <input class="field-input" type="text" placeholder="Marie" id="input-prenom">
+    
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-join" onclick="switchTab('join')">Rejoindre</div>
+      <div class="auth-tab" id="tab-create" onclick="switchTab('create')">Créer une Asso</div>
     </div>
 
-    <div class="field-group">
-      <div class="field-label"><span class="req">✦</span> Mot de passe</div>
-      <input class="field-input" type="password" placeholder="••••••••" id="input-mdp">
+    <!-- Formulaire Rejoindre -->
+    <div id="form-join" style="width:100%;">
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Code d'invitation (ex: YES-8K3P)</div>
+        <input class="field-input" type="text" placeholder="YES-XXXX" id="join-code" style="text-transform:uppercase;">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Ton prénom</div>
+        <input class="field-input" type="text" placeholder="Marie" id="join-prenom">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Mot de passe</div>
+        <input class="field-input" type="password" placeholder="••••••••" id="join-mdp">
+      </div>
+      <button class="btn-action" onclick="handleJoin()">Rejoindre l'association →</button>
     </div>
 
-    <button class="btn-join" onclick="handleJoin()">Rejoindre →</button>
+    <!-- Formulaire Créer -->
+    <div id="form-create" style="width:100%; display:none;">
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Nom de l'association</div>
+        <input class="field-input" type="text" placeholder="Club de Football Gannat" id="create-asso-name">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Ton prénom (Président)</div>
+        <input class="field-input" type="text" placeholder="Alexandre" id="create-prenom">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span class="req">✦</span> Mot de passe</div>
+        <input class="field-input" type="password" placeholder="••••••••" id="create-mdp">
+      </div>
+      <button class="btn-action" onclick="handleCreateAsso()">Créer & devenir Président →</button>
+    </div>
+
     <div style="height: 20px;"></div>
     <div class="ad-banner"><span class="ad-badge">Pub</span>Publicité discrète — jamais intrusive</div>
   </div>
 
+  <!-- Ecran d'accueil -->
   <div class="screen" id="screen-home">
     <div class="topbar">
       <div>
-        <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:2px;">Accueil</div>
+        <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:2px;">Espace membre</div>
         <div style="font-size:18px;font-weight:800;">YesAsso</div>
       </div>
       <div class="avatar" id="avatar-initials">--</div>
@@ -201,7 +238,10 @@
             <div class="asso-title" id="home-asso-title">Chargement...</div>
             <div class="asso-sub" id="home-asso-sub">...</div>
           </div>
-          <div class="role-badge" id="role-display">Membre</div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <div class="role-badge" id="role-display">Membre</div>
+            <div class="code-badge" onclick="copyCode()" id="code-display">Code: ----</div>
+          </div>
         </div>
 
         <p class="section-title">Modules</p>
@@ -210,44 +250,54 @@
             <div class="module-icon agenda">📅</div>
             <div class="module-label">Agenda</div>
           </button>
-          <button class="module-btn" onclick="showToast('Boîte à idées — bientôt disponible !')">
+          <button class="module-btn" onclick="showToast('Boîte à idées — disponible très bientôt !')">
             <div class="module-icon ideas">💡</div>
             <div class="module-label">Boîte à idées</div>
           </button>
-          <button class="module-btn" onclick="showToast('Comptes-rendus — bientôt disponible !')">
+          <button class="module-btn" onclick="showToast('Comptes-rendus — disponible très bientôt !')">
             <div class="module-icon reports">📄</div>
             <div class="module-label">Comptes-rendus</div>
           </button>
-          <button class="module-btn" onclick="showToast('Compte bancaire — bientôt disponible !')">
+          <button class="module-btn" onclick="showToast('Compte bancaire — disponible très bientôt !')">
             <div class="module-icon account">💶</div>
             <div class="module-label">Compte</div>
           </button>
-        </div>
-
-        <div class="next-event" onclick="showScreen('agenda')" id="next-event-card">
-          <div class="next-event-label">⚡ Prochain événement</div>
-          <div class="next-event-title" id="next-event-title">Aucun événement</div>
-          <div class="next-event-sub" id="next-event-sub">--</div>
+          <button class="module-btn" id="btn-admin-module" style="display:none; grid-column: span 2;" onclick="showScreen('members')">
+            <div class="module-icon admin">⚙️</div>
+            <div class="module-label">Gestion des Membres & Rôles</div>
+          </button>
         </div>
       </div>
     </div>
     <div class="ad-banner"><span class="ad-badge">Pub</span>Supprimer les publicités — Achat unique 2,99 €</div>
   </div>
 
+  <!-- Ecran de Gestion des Membres -->
+  <div class="screen" id="screen-members">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('home')">‹</button>
+      <h1>Membres & Rôles</h1>
+      <div></div>
+    </div>
+    <div class="scroll-zone">
+      <p class="section-title">Liste des membres</p>
+      <div id="members-list"></div>
+    </div>
+  </div>
+
+  <!-- Ecran Agenda -->
   <div class="screen" id="screen-agenda">
     <div class="topbar">
       <button class="back-btn" onclick="showScreen('home')">‹</button>
       <h1>Agenda</h1>
       <button class="add-btn" onclick="openEventModal()">+</button>
     </div>
-
     <div class="scroll-zone">
-      <div class="agenda-scroll">
-        <p class="section-title">À venir</p>
+      <div style="padding: 0 0 16px;">
+        <p class="section-title">Événements à venir</p>
         <div id="events-list"></div>
       </div>
     </div>
-    <div class="ad-banner"><span class="ad-badge">Pub</span>Supprimer les publicités — Achat unique 2,99 €</div>
   </div>
 
   <!-- Modale d'ajout d'événement -->
@@ -259,17 +309,17 @@
       </div>
       <div class="field-group">
         <div class="field-label">Titre</div>
-        <input class="field-input" type="text" id="event-title-input" placeholder="Réunion générale">
+        <input class="field-input" type="text" id="event-title-input" placeholder="Entraînement / Réunion">
       </div>
       <div class="field-group">
         <div class="field-label">Lieu</div>
-        <input class="field-input" type="text" id="event-location-input" placeholder="Salle des fêtes">
+        <input class="field-input" type="text" id="event-location-input" placeholder="Stade municipal">
       </div>
       <div class="field-group">
         <div class="field-label">Date et Heure</div>
         <input class="field-input" type="datetime-local" id="event-date-input">
       </div>
-      <button class="btn-join" onclick="submitEvent()">Ajouter l'événement</button>
+      <button class="btn-action" onclick="submitEvent()">Ajouter l'événement</button>
     </div>
   </div>
 
@@ -289,14 +339,15 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  let currentAssoId = "demo-asso";
+  let currentAssoId = null;
   let currentUserData = null;
+  let currentInviteCode = null;
 
-  // Charger les données de l'asso dès l'ouverture
-  loadAssociationData();
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js'); });
+  function switchTab(type) {
+    document.getElementById('tab-join').classList.toggle('active', type === 'join');
+    document.getElementById('tab-create').classList.toggle('active', type === 'create');
+    document.getElementById('form-join').style.display = type === 'join' ? 'block' : 'none';
+    document.getElementById('form-create').style.display = type === 'create' ? 'block' : 'none';
   }
 
   function showScreen(name) {
@@ -313,16 +364,72 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  async function handleJoin() {
-    const prenom = document.getElementById('input-prenom').value.trim();
-    const mdp = document.getElementById('input-mdp').value.trim();
-    if (!prenom || !mdp) { showToast('Remplis le prénom et mot de passe'); return; }
+  function generateInviteCode() {
+    return 'YES-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  }
 
-    const cleanName = prenom.toLowerCase().replace(/\s+/g, '');
-    const cleanPass = mdp.slice(-4);
-    const email = `${cleanName}-${cleanPass}@yesasso.local`;
+  // CRÉATION D'UNE ASSOCIATION ET COMPTE PRÉSIDENT
+  async function handleCreateAsso() {
+    const assoName = document.getElementById('create-asso-name').value.trim();
+    const prenom = document.getElementById('create-prenom').value.trim();
+    const mdp = document.getElementById('create-mdp').value.trim();
+
+    if (!assoName || !prenom || !mdp) { showToast('Remplis tous les champs'); return; }
 
     try {
+      const cleanName = prenom.toLowerCase().replace(/\s+/g, '');
+      const cleanPass = mdp.slice(-4);
+      const email = `${cleanName}-${cleanPass}@yesasso.local`;
+
+      const userCred = await auth.createUserWithEmailAndPassword(email, mdp);
+      const uid = userCred.user.uid;
+      const inviteCode = generateInviteCode();
+
+      // Créer la sous-collection Asso
+      const assoRef = await db.collection('associations').add({
+        name: assoName,
+        inviteCode: inviteCode,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      currentAssoId = assoRef.id;
+      currentInviteCode = inviteCode;
+
+      // Créer le membre Président
+      await assoRef.collection('members').doc(uid).set({
+        prenom: prenom,
+        role: 'Président',
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      currentUserData = { prenom, role: 'Président' };
+      setupHomeScreen();
+    } catch (e) {
+      showToast('Erreur création : ' + e.message);
+    }
+  }
+
+  // REJOINDRE UNE ASSOCIATION PAR CODE
+  async function handleJoin() {
+    const code = document.getElementById('join-code').value.trim().toUpperCase();
+    const prenom = document.getElementById('join-prenom').value.trim();
+    const mdp = document.getElementById('join-mdp').value.trim();
+
+    if (!code || !prenom || !mdp) { showToast('Remplis tous les champs'); return; }
+
+    try {
+      // Trouver l'association correspondant au code
+      const snapshot = await db.collection('associations').where('inviteCode', '==', code).get();
+      if (snapshot.empty) { showToast('Code d\'association invalide'); return; }
+
+      const assoDoc = snapshot.docs[0];
+      currentAssoId = assoDoc.id;
+      currentInviteCode = code;
+
+      const cleanName = prenom.toLowerCase().replace(/\s+/g, '');
+      const cleanPass = mdp.slice(-4);
+      const email = `${cleanName}-${cleanPass}@yesasso.local`;
+
       let userCred;
       try {
         userCred = await auth.signInWithEmailAndPassword(email, mdp);
@@ -331,42 +438,97 @@
       }
 
       const uid = userCred.user.uid;
-      const initials = prenom.substring(0, 2).toUpperCase();
-      currentUserData = { prenom, role: 'Membre' };
 
-      await db.collection('associations').doc(currentAssoId).collection('members').doc(uid).set({
-        prenom: prenom,
-        role: 'Membre',
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      // Vérifier si le rôle existe déjà
+      const memberDoc = await assoDoc.ref.collection('members').doc(uid).get();
+      let role = 'Membre';
+      if (memberDoc.exists) {
+        role = memberDoc.data().role || 'Membre';
+      } else {
+        await assoDoc.ref.collection('members').doc(uid).set({
+          prenom: prenom,
+          role: role,
+          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
 
-      document.getElementById('avatar-initials').textContent = initials;
-      document.getElementById('role-display').textContent = currentUserData.role;
-
-      loadEvents();
-      showScreen('home');
-    } catch (err) {
-      showToast('Erreur d\'accès: ' + err.message);
+      currentUserData = { prenom, role };
+      setupHomeScreen();
+    } catch (e) {
+      showToast('Erreur d\'accès : ' + e.message);
     }
   }
 
-  function loadAssociationData() {
+  function setupHomeScreen() {
+    document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
+    document.getElementById('role-display').textContent = currentUserData.role;
+    document.getElementById('code-display').textContent = 'Code: ' + currentInviteCode;
+
+    // Afficher le module d'administration si Président
+    if (currentUserData.role === 'Président') {
+      document.getElementById('btn-admin-module').style.display = 'flex';
+    } else {
+      document.getElementById('btn-admin-module').style.display = 'none';
+    }
+
+    loadAssociationInfo();
+    loadEvents();
+    loadMembers();
+    showScreen('home');
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(currentInviteCode);
+    showToast('Code ' + currentInviteCode + ' copié !');
+  }
+
+  function loadAssociationInfo() {
     db.collection('associations').doc(currentAssoId).onSnapshot(doc => {
       if (doc.exists) {
-        const data = doc.data();
-        document.getElementById('asso-display-name').textContent = data.name || 'Association Demo';
-        document.getElementById('asso-display-count').textContent = data.memberCount || 1;
-        document.getElementById('home-asso-title').textContent = data.name || 'Association Demo';
-        document.getElementById('home-asso-sub').textContent = `${data.memberCount || 1} membres · ${data.subtitle || 'Bienvenue'}`;
-      } else {
-        // Asso par défaut si elle n'existe pas encore dans Firestore
-        db.collection('associations').doc(currentAssoId).set({
-          name: "Association Demo",
-          subtitle: "Espace communautaire",
-          memberCount: 1
-        });
+        document.getElementById('home-asso-title').textContent = doc.data().name;
+        document.getElementById('home-asso-sub').textContent = `Espace collaboratif`;
       }
     });
+  }
+
+  function loadMembers() {
+    db.collection('associations').doc(currentAssoId).collection('members').onSnapshot(snapshot => {
+      const list = document.getElementById('members-list');
+      list.innerHTML = '';
+      
+      snapshot.forEach(doc => {
+        const member = doc.data();
+        const memberId = doc.id;
+        
+        list.innerHTML += `
+          <div class="member-card">
+            <div class="member-info">
+              <span class="member-name">${member.prenom}</span>
+              <span class="member-role-text">Rôle actuel: ${member.role}</span>
+            </div>
+            ${currentUserData.role === 'Président' ? `
+              <select class="field-select" style="width: auto; padding: 6px 10px;" onchange="updateRole('${memberId}', this.value)">
+                <option value="Membre" ${member.role === 'Membre' ? 'selected' : ''}>Membre</option>
+                <option value="Trésorier" ${member.role === 'Trésorier' ? 'selected' : ''}>Trésorier</option>
+                <option value="Secrétaire" ${member.role === 'Secrétaire' ? 'selected' : ''}>Secrétaire</option>
+                <option value="Président" ${member.role === 'Président' ? 'selected' : ''}>Président</option>
+              </select>
+            ` : ''}
+          </div>
+        `;
+      });
+    });
+  }
+
+  async function updateRole(memberId, newRole) {
+    try {
+      await db.collection('associations').doc(currentAssoId).collection('members').doc(memberId).update({
+        role: newRole
+      });
+      showToast('Rôle mis à jour !');
+    } catch (e) {
+      showToast('Erreur mise à jour rôle');
+    }
   }
 
   function loadEvents() {
@@ -377,25 +539,16 @@
         list.innerHTML = '';
 
         if (snapshot.empty) {
-          list.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement à venir</div>';
-          document.getElementById('next-event-title').textContent = 'Aucun événement';
-          document.getElementById('next-event-sub').textContent = '--';
+          list.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement prévu</div>';
           return;
         }
 
-        let first = true;
         snapshot.forEach(doc => {
           const item = doc.data();
           const d = item.date ? item.date.toDate() : new Date();
           const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
           const day = d.getDate();
           const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
-
-          if (first) {
-            document.getElementById('next-event-title').textContent = item.title;
-            document.getElementById('next-event-sub').textContent = `${day} ${month} · ${time} · ${item.location || ''}`;
-            first = false;
-          }
 
           list.innerHTML += `
             <div class="event-item">
@@ -407,30 +560,21 @@
                 <div class="event-title">${item.title}</div>
                 <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
               </div>
-              <div class="event-chevron">›</div>
             </div>
           `;
         });
       });
   }
 
-  function openEventModal() {
-    document.getElementById('modal-event').classList.add('active');
-  }
-
-  function closeEventModal() {
-    document.getElementById('modal-event').classList.remove('active');
-  }
+  function openEventModal() { document.getElementById('modal-event').classList.add('active'); }
+  function closeEventModal() { document.getElementById('modal-event').classList.remove('active'); }
 
   async function submitEvent() {
     const title = document.getElementById('event-title-input').value.trim();
     const location = document.getElementById('event-location-input').value.trim();
     const dateValue = document.getElementById('event-date-input').value;
 
-    if (!title || !dateValue) {
-      showToast('Merci d\'indiquer un titre et une date');
-      return;
-    }
+    if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
 
     try {
       await db.collection('associations').doc(currentAssoId).collection('events').add({
@@ -445,7 +589,7 @@
       document.getElementById('event-date-input').value = '';
       showToast('Événement ajouté !');
     } catch (e) {
-      showToast('Erreur lors de l\'ajout');
+      showToast('Erreur d\'ajout d\'événement');
     }
   }
 </script>
