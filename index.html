@@ -163,6 +163,12 @@
       width: 36px; height: 36px; background: var(--blue); border: none; border-radius: 50%;
       color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
+    .logout-btn {
+      width: 36px; height: 36px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 50%;
+      color: var(--danger); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .logout-btn:hover { background: var(--danger); color: #fff; }
   </style>
 </head>
 <body>
@@ -236,7 +242,8 @@
           <label class="field-label">Mot de passe</label>
           <input type="password" id="create-mdp" class="field-input" placeholder="••••••••">
         </div>
-<button type="button" onclick="handleCreateAsso()">Créer Asso & Devenir Président</button>      </div>
+        <button class="btn-action" type="button" onclick="handleCreateAsso()">Créer Asso & Devenir Président →</button>
+      </div>
 
       <div class="ad-banner" style="position: absolute; bottom: 0; left: 0; right: 0;">
         <span class="ad-badge">PUB</span> Publicité discrète — jamais intrusive
@@ -251,6 +258,7 @@
         <div style="display: flex; align-items: center; gap: 10px;">
           <span class="role-badge" id="role-display">Président</span>
           <div class="avatar" id="avatar-initials">BQ</div>
+          <button class="logout-btn" onclick="handleLogout()" title="Se déconnecter">⎋</button>
         </div>
       </div>
 
@@ -658,6 +666,20 @@
         showToast('Erreur d\'ajout d\'événement');
       }
     }
+
+    async function handleLogout() {
+      try {
+        await getAuth().signOut();
+        currentAssoId = null;
+        currentUserData = null;
+        currentInviteCode = null;
+        showScreen('auth');
+        showToast('Déconnexion réussie');
+        window.location.reload();
+      } catch (e) {
+        showToast('Erreur lors de la déconnexion');
+      }
+    }
   </script>
 </body>
-</html> 
+</html>
