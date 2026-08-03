@@ -433,19 +433,21 @@
     let currentInviteCode = null;
 
 function switchWelcomeTab(type) {
-      // Masquer les 3 gros boutons d'accueil
+      // 1. On cache les 3 gros boutons d'accueil
       document.getElementById('welcome-tabs-container').style.display = 'none';
-      // Afficher le conteneur du formulaire
-      document.getElementById('welcome-form-container').style.display = 'block';
+      
+      // 2. On affiche le conteneur global des formulaires
+      const formContainer = document.getElementById('welcome-form-container');
+      formContainer.style.display = 'block';
 
-      // Afficher uniquement le formulaire correspondant au choix
+      // 3. On affiche SEULEMENT le formulaire demandé, et on s'assure de cacher les deux autres
       document.getElementById('form-login').style.display = (type === 'login') ? 'block' : 'none';
       document.getElementById('form-join').style.display = (type === 'join') ? 'block' : 'none';
       document.getElementById('form-create').style.display = (type === 'create') ? 'block' : 'none';
     }
 
     function backToWelcomeTabs() {
-      // Masquer le formulaire et réafficher les 3 gros boutons
+      // On cache tout le bloc formulaire et on réaffiche les 3 gros boutons
       document.getElementById('welcome-form-container').style.display = 'none';
       document.getElementById('welcome-tabs-container').style.display = 'flex';
     }
