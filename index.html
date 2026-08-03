@@ -872,9 +872,9 @@
       }
     }
 
-    function loadIdeas() {
+function loadIdeas() {
+      // On retire le orderBy pour éviter le blocage si l'index Firestore n'est pas prêt
       getDb().collection('associations').doc(currentAssoId).collection('ideas')
-        .orderBy('createdAt', 'desc')
         .onSnapshot(snapshot => {
           const container = document.getElementById('ideas-list-container');
           if (!container) return;
@@ -884,14 +884,23 @@
             return;
           }
 
+          let ideasArray = [];
+          snapshot.forEach(doc => {
+            ideasArray.push({ id: doc.id, ...doc.data() });
+          });
+
+          // Tri manuel côté JavaScript du plus récent au plus ancien (gère les timestamps nuls)
+          ideasArray.sort((a, b) => {
+            let timeA = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+            let timeB = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+            return timeB - timeA;
+          });
+
           let html = '';
           const currentUid = getAuth().currentUser.uid;
           const isPresident = (currentUserData && currentUserData.role === 'Président');
 
-          snapshot.forEach(doc => {
-            const idea = doc.data();
-            const ideaId = doc.id;
-
+          ideasArray.forEach(idea => {
             const upvotes = idea.upvotes || [];
             const downvotes = idea.downvotes || [];
             const hasUpvoted = upvotes.includes(currentUid);
@@ -899,7 +908,7 @@
 
             let deleteBtn = '';
             if (isPresident) {
-              deleteBtn = `<button class="delete-idea-btn" onclick="deleteIdea('${ideaId}')" title="Supprimer l'idée">🗑️</button>`;
+              deleteBtn = `<button class="delete-idea-btn" onclick="deleteIdea('${idea.id}')" title="Supprimer l'idée">🗑️</button>`;
             }
 
             html += `
@@ -912,10 +921,10 @@
                 ${idea.imageUrl ? `<img src="${idea.imageUrl}" class="idea-img">` : ''}
                 <div class="idea-footer">
                   <div class="vote-group">
-                    <button class="vote-btn ${hasUpvoted ? 'voted-up' : ''}" onclick="voteIdea('${ideaId}', 'up')">
+                    <button class="vote-btn ${hasUpvoted ? 'voted-up' : ''}" onclick="voteIdea('${idea.id}', 'up')">
                       👍 <span>${upvotes.length}</span>
                     </button>
-                    <button class="vote-btn ${hasDownvoted ? 'voted-down' : ''}" onclick="voteIdea('${ideaId}', 'down')">
+                    <button class="vote-btn ${hasDownvoted ? 'voted-down' : ''}" onclick="voteIdea('${idea.id}', 'down')">
                       👎 <span>${downvotes.length}</span>
                     </button>
                   </div>
@@ -926,7 +935,7 @@
           container.innerHTML = html;
         });
     }
-
+    
     async function voteIdea(ideaId, type) {
       const currentUid = getAuth().currentUser.uid;
       const ideaRef = getDb().collection('associations').doc(currentAssoId).collection('ideas').doc(ideaId);
