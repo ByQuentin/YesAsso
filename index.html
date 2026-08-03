@@ -756,6 +756,41 @@ async function handleLogin() {
         console.error("Erreur de configuration de la persistance :", error);
         showScreen('auth');
       });
+
+async function kickMember(memberUid, memberName) {
+      // Vérification de sécurité côté front : est-ce que l'utilisateur actuel est le président ?
+      if (!currentUserData || currentUserData.role !== 'Président') {
+        showToast('Action réservée au président');
+        return;
+      }
+
+      if (memberUid === getAuth().currentUser.uid) {
+        showToast('Tu ne peux pas te supprimer toi-même !');
+        return;
+      }
+
+      if (!confirm(`Es-tu sûr de vouloir virer ${memberName || 'ce membre'} de l'association ?`)) {
+        return;
+      }
+
+      try {
+        await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberUid).delete();
+        showToast('Membre exclu avec succès');
+        // La liste des membres se mettra à jour toute seule si tu utilises un onSnapshot
+      } catch (e) {
+        console.error("Erreur lors de l'exclusion du membre :", e);
+        showToast('Erreur lors de l\'exclusion');
+      }
+    }
+
+    // Exemple à intégrer dans ta boucle d'affichage des membres :
+const isCurrentUserPresident = (currentUserData && currentUserData.role === 'Président');
+const isSelf = (member.uid === getAuth().currentUser.uid);
+
+let kickButtonHtml = '';
+if (isCurrentUserPresident && !isSelf) {
+  kickButtonHtml = `<button onclick="kickMember('${member.uid}', '${member.name}')" style="background:var(--danger, #ff4d4d); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">Virer</button>`;
+}
   </script>
 </body>
 </html>
