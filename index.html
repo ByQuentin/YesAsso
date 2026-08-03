@@ -184,70 +184,92 @@
     <div id="toast" class="toast">Notification</div>
 
     <!-- 1. ÉCRAN AUTHENTIFICATION -->
-    <div id="screen-auth" class="screen auth-screen">
+    <div id="screen-auth" class="screen auth-screen" style="justify-content: center; position: relative;">
       <div class="asso-icon">👥</div>
       <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">YesAsso</h1>
       <p style="color: var(--muted); font-size: 14px; margin-bottom: 24px; text-align: center;">Gestion collaborative simplifiée</p>
 
-      <div class="auth-tabs">
-        <div id="tab-login" class="auth-tab" onclick="switchTab('login')">Se connecter</div>
-        <div id="tab-join" class="auth-tab" onclick="switchTab('join')">Rejoindre</div>
-        <div id="tab-create" class="auth-tab active" onclick="switchTab('create')">Créer Asso</div>
+      <!-- 3 GROS ONGLETS D'ACCUEIL -->
+      <div id="welcome-tabs-container" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <button onclick="switchWelcomeTab('login')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all .2s;">
+          <span style="display: flex; align-items: center; gap: 10px;">🔑 Se connecter</span>
+          <span style="color: var(--blue-light);">→</span>
+        </button>
+
+        <button onclick="switchWelcomeTab('join')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all .2s;">
+          <span style="display: flex; align-items: center; gap: 10px;">🤝 Rejoindre une asso</span>
+          <span style="color: var(--blue-light);">→</span>
+        </button>
+
+        <button onclick="switchWelcomeTab('create')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all .2s;">
+          <span style="display: flex; align-items: center; gap: 10px;">✨ Créer une association</span>
+          <span style="color: var(--blue-light);">→</span>
+        </button>
       </div>
 
-      <!-- Formulaire Connexion -->
-      <div id="form-login" style="display: none; width: 100%;">
-        <div class="field-group">
-          <label class="field-label">Adresse e-mail</label>
-          <input type="email" id="login-email" class="field-input" placeholder="ton@email.com">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Mot de passe</label>
-          <input type="password" id="login-mdp" class="field-input" placeholder="••••••••">
-        </div>
-        <button class="btn-action" onclick="handleLogin()">Se connecter →</button>
-      </div>
+      <!-- CONTENEUR DU FORMULAIRE DYNAMIQUE (Caché par défaut) -->
+      <div id="welcome-form-container" style="display: none; width: 100%;">
+        <button onclick="backToWelcomeTabs()" style="background: none; border: none; color: var(--muted); cursor: pointer; margin-bottom: 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+          ← Retour aux choix
+        </button>
 
-      <!-- Formulaire Rejoindre -->
-      <div id="form-join" style="display: none; width: 100%;">
-        <div class="field-group">
-          <label class="field-label">Code d'invitation</label>
-          <input type="text" id="join-code" class="field-input" placeholder="EX: XXX-XXXX">
+        <!-- Formulaire Connexion -->
+        <div id="form-login" style="display: none; width: 100%;">
+          <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Connexion</h2>
+          <div class="field-group">
+            <label class="field-label">Adresse e-mail</label>
+            <input type="email" id="login-email" class="field-input" placeholder="ton@email.com">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Mot de passe</label>
+            <input type="password" id="login-mdp" class="field-input" placeholder="••••••••">
+          </div>
+          <button class="btn-action" onclick="handleLogin()">Se connecter →</button>
         </div>
-        <div class="field-group">
-          <label class="field-label">Ton prénom</label>
-          <input type="text" id="join-prenom" class="field-input" placeholder="Prénom">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Adresse e-mail</label>
-          <input type="email" id="join-email" class="field-input" placeholder="ton@email.com">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Mot de passe</label>
-          <input type="password" id="join-mdp" class="field-input" placeholder="••••••••">
-        </div>
-        <button class="btn-action" onclick="handleJoin()">Rejoindre l'asso →</button>
-      </div>
 
-      <!-- Formulaire Créer Asso -->
-      <div id="form-create" style="display: block; width: 100%;">
-        <div class="field-group">
-          <label class="field-label">Nom de l'association</label>
-          <input type="text" id="create-asso-name" class="field-input" placeholder="Nom de l'asso">
+        <!-- Formulaire Rejoindre -->
+        <div id="form-join" style="display: none; width: 100%;">
+          <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Rejoindre l'asso</h2>
+          <div class="field-group">
+            <label class="field-label">Code d'invitation</label>
+            <input type="text" id="join-code" class="field-input" placeholder="EX: YES-XXXX">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Ton prénom</label>
+            <input type="text" id="join-prenom" class="field-input" placeholder="Prénom">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Adresse e-mail</label>
+            <input type="email" id="join-email" class="field-input" placeholder="ton@email.com">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Mot de passe</label>
+            <input type="password" id="join-mdp" class="field-input" placeholder="••••••••">
+          </div>
+          <button class="btn-action" onclick="handleJoin()">Rejoindre l'asso →</button>
         </div>
-        <div class="field-group">
-          <label class="field-label">Ton prénom (Président)</label>
-          <input type="text" id="create-prenom" class="field-input" placeholder="Prénom">
+
+        <!-- Formulaire Créer Asso -->
+        <div id="form-create" style="display: none; width: 100%;">
+          <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Créer une association</h2>
+          <div class="field-group">
+            <label class="field-label">Nom de l'association</label>
+            <input type="text" id="create-asso-name" class="field-input" placeholder="Nom de l'asso">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Ton prénom (Président)</label>
+            <input type="text" id="create-prenom" class="field-input" placeholder="Prénom">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Adresse e-mail</label>
+            <input type="email" id="create-email" class="field-input" placeholder="ton@email.com">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Mot de passe</label>
+            <input type="password" id="create-mdp" class="field-input" placeholder="••••••••">
+          </div>
+          <button class="btn-action" type="button" onclick="handleCreateAsso()">Créer Asso & Devenir Président →</button>
         </div>
-        <div class="field-group">
-          <label class="field-label">Adresse e-mail</label>
-          <input type="email" id="create-email" class="field-input" placeholder="ton@email.com">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Mot de passe</label>
-          <input type="password" id="create-mdp" class="field-input" placeholder="••••••••">
-        </div>
-        <button class="btn-action" type="button" onclick="handleCreateAsso()">Créer Asso & Devenir Président →</button>
       </div>
 
       <div class="ad-banner" style="position: absolute; bottom: 0; left: 0; right: 0;">
@@ -838,6 +860,53 @@ async function submitEvent() {
         showScreen('auth');
       }
     });
+
+    function switchWelcomeTab(tabType) {
+  // Masquer les 3 gros onglets
+  document.getElementById('welcome-tabs-container').style.display = 'none';
+  // Afficher le conteneur du formulaire
+  const formContainer = document.getElementById('welcome-form-container');
+  formContainer.style.display = 'block';
+
+  const contentDiv = document.getElementById('dynamic-form-content');
+
+  // Charger le contenu HTML correspondant au choix de l'utilisateur
+  if (tabType === 'login') {
+    contentDiv.innerHTML = `
+      <h3>Connexion</h3>
+      <!-- Insère ici les champs de ton formulaire de connexion existant -->
+      <input type="email" id="login-email" placeholder="Adresse e-mail" class="input-field">
+      <input type="password" id="login-password" placeholder="Mot de passe" class="input-field">
+      <button onclick="handleLogin()" class="action-btn">Se connecter →</button>
+    `;
+  } else if (tabType === 'join') {
+    contentDiv.innerHTML = `
+      <h3>Rejoindre une association</h3>
+      <!-- Insère ici les champs pour rejoindre -->
+      <input type="text" id="join-code" placeholder="Code d'invitation" class="input-field">
+      <input type="text" id="join-prenom" placeholder="Ton prénom" class="input-field">
+      <input type="email" id="join-email" placeholder="Adresse e-mail" class="input-field">
+      <input type="password" id="join-password" placeholder="Mot de passe" class="input-field">
+      <button onclick="handleJoinAsso()" class="action-btn">Rejoindre l'asso →</button>
+    `;
+  } else if (tabType === 'create') {
+    contentDiv.innerHTML = `
+      <h3>Créer une association</h3>
+      <!-- Insère ici les champs pour créer -->
+      <input type="text" id="create-name" placeholder="Nom de l'association" class="input-field">
+      <input type="text" id="create-prenom" placeholder="Ton prénom (Président)" class="input-field">
+      <input type="email" id="create-email" placeholder="Adresse e-mail" class="input-field">
+      <input type="password" id="create-password" placeholder="Mot de passe" class="input-field">
+      <button onclick="handleCreateAsso()" class="action-btn">Créer l'asso →</button>
+    `;
+  }
+}
+
+function backToWelcomeTabs() {
+  // Réafficher les 3 gros onglets et cacher le formulaire
+  document.getElementById('welcome-form-container').style.display = 'none';
+  document.getElementById('welcome-tabs-container').style.display = 'flex';
+}
   </script>
 </body>
 </html>
