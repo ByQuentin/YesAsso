@@ -656,7 +656,7 @@
                   const d = item.date.toDate();
                   month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
                   day = d.getDate();
-                  time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
+                  time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
                 }
               } catch (err) {
                 console.warn("Date non parsable pour l'événement :", item.title);
