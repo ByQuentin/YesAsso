@@ -662,7 +662,11 @@ function loadEvents() {
           if (snapshot.empty) {
             htmlContent = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement prévu</div>';
           } else {
-            const now = new Date(); // Date et heure actuelles
+            const now = new Date();
+            
+            // On autorise ici le Président, le Trésorier et le Secrétaire à supprimer un événement
+            const userRole = currentUserData ? currentUserData.role : '';
+            const canDelete = ['Président', 'Trésorier', 'Secrétaire'].includes(userRole);
 
             snapshot.forEach(doc => {
               const item = doc.data();
@@ -679,7 +683,6 @@ function loadEvents() {
                   day = d.getDate();
                   time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
                   
-                  // On vérifie si l'événement est dépassé
                   if (d < now) {
                     isPast = true;
                   }
@@ -688,7 +691,12 @@ function loadEvents() {
                 console.warn("Date non parsable pour l'événement :", item.title);
               }
 
-              // Style visuel différent si l'événement est passé (opacité réduite + badge horloge)
+              // Le bouton s'affiche si l'utilisateur a l'un des rôles autorisés
+              let deleteButtonHtml = '';
+              if (canDelete) {
+                deleteButtonHtml = `<button class="delete-event-btn" onclick="deleteEvent('${eventId}', '${item.title || 'cet événement'}')" title="Supprimer">🗑️</button>`;
+              }
+
               htmlContent += `
                 <div class="event-item" style="${isPast ? 'opacity: 0.6; border-color: rgba(239,68,68,0.3);' : ''}">
                   <div class="event-date">
@@ -702,7 +710,7 @@ function loadEvents() {
                     </div>
                     <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || 'Lieu non spécifié'}</div>
                   </div>
-                  <button class="delete-event-btn" onclick="deleteEvent('${eventId}', '${item.title || 'cet événement'}')" title="Supprimer">🗑️</button>
+                  ${deleteButtonHtml}
                 </div>
               `;
             });
@@ -711,6 +719,7 @@ function loadEvents() {
           if (agendaList) agendaList.innerHTML = htmlContent;
         });
     }
+
     function openEventModal() {
       const modal = document.getElementById('modal-event');
       if (modal) modal.classList.add('active');
