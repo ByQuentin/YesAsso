@@ -245,7 +245,7 @@
           <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Rejoindre l'asso</h2>
           <div class="field-group">
             <label class="field-label">Code d'invitation</label>
-            <input type="text" id="join-code" class="field-input" placeholder="EX: YES-XXXX">
+            <input type="text" id="join-code" class="field-input" placeholder="EX: XXX-XXXX">
           </div>
           <div class="field-group">
             <label class="field-label">Ton prénom</label>
@@ -444,12 +444,15 @@
         </div>
         <button class="btn-action" onclick="submitIdea()">Publier l'idée →</button>
       </div>
+    </div>
+
     <!-- MODALE ZOOM IMAGE -->
     <div class="modal-overlay" id="modal-zoom" onclick="closeZoomModal()" style="align-items: center; justify-content: center; padding: 20px;">
       <div style="position: relative; max-width: 100%; max-height: 90vh; display: flex; align-items: center; justify-content: center;" onclick="event.stopPropagation()">
         <button class="modal-close" onclick="closeZoomModal()" style="position: absolute; top: -40px; right: 0; background: var(--card2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; border: 1px solid var(--border);">×</button>
         <img id="zoom-img-target" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 12px; border: 1px solid var(--border);">
       </div>
+    </div>
 
   </div>
 
@@ -848,7 +851,6 @@
       let imageUrl = '';
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        // Conversion de l'image en Base64 pour stockage direct et simple dans Firestore
         imageUrl = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => resolve(e.target.result);
@@ -877,8 +879,7 @@
       }
     }
 
-function loadIdeas() {
-      // On retire le orderBy pour éviter le blocage si l'index Firestore n'est pas prêt
+    function loadIdeas() {
       getDb().collection('associations').doc(currentAssoId).collection('ideas')
         .onSnapshot(snapshot => {
           const container = document.getElementById('ideas-list-container');
@@ -894,7 +895,6 @@ function loadIdeas() {
             ideasArray.push({ id: doc.id, ...doc.data() });
           });
 
-          // Tri manuel côté JavaScript du plus récent au plus ancien (gère les timestamps nuls)
           ideasArray.sort((a, b) => {
             let timeA = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
             let timeB = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
@@ -923,7 +923,8 @@ function loadIdeas() {
                   ${deleteBtn}
                 </div>
                 <div class="idea-text">${idea.text}</div>
-${idea.imageUrl ? `<img src="${idea.imageUrl}" class="idea-img" style="cursor: pointer;" onclick="openZoomModal('${idea.imageUrl}')" title="Cliquer pour agrandir">` : ''}                <div class="idea-footer">
+                ${idea.imageUrl ? `<img src="${idea.imageUrl}" class="idea-img" style="cursor: pointer;" onclick="openZoomModal('${idea.imageUrl}')" title="Cliquer pour agrandir">` : ''}
+                <div class="idea-footer">
                   <div class="vote-group">
                     <button class="vote-btn ${hasUpvoted ? 'voted-up' : ''}" onclick="voteIdea('${idea.id}', 'up')">
                       👍 <span>${upvotes.length}</span>
@@ -954,17 +955,17 @@ ${idea.imageUrl ? `<img src="${idea.imageUrl}" class="idea-img" style="cursor: p
 
           if (type === 'up') {
             if (upvotes.includes(currentUid)) {
-              upvotes = upvotes.filter(id => id !== currentUid); // Annule le vote
+              upvotes = upvotes.filter(id => id !== currentUid);
             } else {
               upvotes.push(currentUid);
-              downvotes = downvotes.filter(id => id !== currentUid); // Retire le pouce rouge si présent
+              downvotes = downvotes.filter(id => id !== currentUid);
             }
           } else if (type === 'down') {
             if (downvotes.includes(currentUid)) {
-              downvotes = downvotes.filter(id => id !== currentUid); // Annule le vote
+              downvotes = downvotes.filter(id => id !== currentUid);
             } else {
               downvotes.push(currentUid);
-              upvotes = upvotes.filter(id => id !== currentUid); // Retire le pouce vert si présent
+              upvotes = upvotes.filter(id => id !== currentUid);
             }
           }
 
@@ -1028,6 +1029,7 @@ ${idea.imageUrl ? `<img src="${idea.imageUrl}" class="idea-img" style="cursor: p
         showScreen('auth');
       }
     });
+
     function openZoomModal(url) {
       document.getElementById('zoom-img-target').src = url;
       document.getElementById('modal-zoom').classList.add('active');
@@ -1036,7 +1038,6 @@ ${idea.imageUrl ? `<img src="${idea.imageUrl}" class="idea-img" style="cursor: p
     function closeZoomModal() {
       document.getElementById('modal-zoom').classList.remove('active');
     }
-    
   </script>
 </body>
 </html>
