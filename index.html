@@ -59,19 +59,16 @@
       border-radius: 22px; display: flex; align-items: center; justify-content: center;
       font-size: 32px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(37,99,235,.4);
     }
-    .auth-tabs { display: flex; background: var(--card2); border-radius: 12px; padding: 4px; width: 100%; margin-bottom: 20px; border: 1px solid var(--border); }
-    .auth-tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all .2s; }
-    .auth-tab.active { background: var(--blue); color: #fff; }
-
     .field-group { width: 100%; margin-bottom: 14px; }
     .field-label { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-    .field-input, .field-select {
+    .field-input, .field-select, .field-textarea {
       width: 100%; background: var(--card2); border: 1.5px solid var(--border); border-radius: 14px;
       padding: 12px 16px; font-size: 15px; font-family: inherit; color: var(--text); outline: none;
       transition: border-color .2s, box-shadow .2s;
     }
-    .field-input::placeholder { color: var(--muted); }
-    .field-input:focus, .field-select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
+    .field-textarea { resize: none; height: 100px; }
+    .field-input::placeholder, .field-textarea::placeholder { color: var(--muted); }
+    .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
     
     .btn-action {
       width: 100%; margin-top: 8px; background: var(--blue); border: none; border-radius: 14px;
@@ -138,7 +135,7 @@
     }
     .modal-overlay.active { display: flex; }
     .modal-content {
-      width: 100%; background: var(--card); border-top: 1px solid var(--border);
+      width: 100%; max-height: 90vh; overflow-y: auto; background: var(--card); border-top: 1px solid var(--border);
       border-radius: 24px 24px 0 0; padding: 24px; animation: slideUp 0.2s ease-out;
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -161,12 +158,30 @@
       width: 36px; height: 36px; background: var(--blue); border: none; border-radius: 50%;
       color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .delete-event-btn {
+    .delete-event-btn, .delete-idea-btn {
       background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--danger);
       width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
       cursor: pointer; font-size: 14px; transition: background .15s; flex-shrink: 0;
     }
-    .delete-event-btn:hover { background: var(--danger); color: #fff; }
+    .delete-event-btn:hover, .delete-idea-btn:hover { background: var(--danger); color: #fff; }
+
+    /* STLES BOITE A IDEES */
+    .idea-card {
+      background: var(--card); border: 1.5px solid var(--border); border-radius: 18px;
+      padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .idea-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); }
+    .idea-text { font-size: 14px; line-height: 1.5; color: var(--text); }
+    .idea-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); }
+    .idea-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+    .vote-group { display: flex; gap: 8px; align-items: center; }
+    .vote-btn {
+      background: var(--card2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 6px 12px; color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: all .15s;
+    }
+    .vote-btn.voted-up { background: rgba(16,185,129,0.2); border-color: var(--green); color: var(--green); }
+    .vote-btn.voted-down { background: rgba(239,68,68,0.2); border-color: var(--danger); color: var(--danger); }
 
     .logout-btn {
       width: 36px; height: 36px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 50%;
@@ -189,25 +204,23 @@
       <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">YesAsso</h1>
       <p style="color: var(--muted); font-size: 14px; margin-bottom: 24px; text-align: center;">Gestion collaborative simplifiée</p>
 
-      <!-- 3 GROS ONGLETS D'ACCUEIL -->
       <div id="welcome-tabs-container" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-        <button onclick="switchWelcomeTab('login')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all .2s;">
+        <button onclick="switchWelcomeTab('login')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
           <span style="display: flex; align-items: center; gap: 10px;">🔑 Se connecter</span>
           <span style="color: var(--blue-light);">→</span>
         </button>
 
-        <button onclick="switchWelcomeTab('join')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all .2s;">
+        <button onclick="switchWelcomeTab('join')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
           <span style="display: flex; align-items: center; gap: 10px;">🤝 Rejoindre une asso</span>
           <span style="color: var(--blue-light);">→</span>
         </button>
 
-        <button onclick="switchWelcomeTab('create')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all .2s;">
+        <button onclick="switchWelcomeTab('create')" style="background: var(--card2); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
           <span style="display: flex; align-items: center; gap: 10px;">✨ Créer une association</span>
           <span style="color: var(--blue-light);">→</span>
         </button>
       </div>
 
-      <!-- CONTENEUR DU FORMULAIRE DYNAMIQUE (Caché par défaut) -->
       <div id="welcome-form-container" style="display: none; width: 100%;">
         <button onclick="backToWelcomeTabs()" style="background: none; border: none; color: var(--muted); cursor: pointer; margin-bottom: 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
           ← Retour aux choix
@@ -232,7 +245,7 @@
           <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Rejoindre l'asso</h2>
           <div class="field-group">
             <label class="field-label">Code d'invitation</label>
-            <input type="text" id="join-code" class="field-input" placeholder="EX: XXX-XXXX">
+            <input type="text" id="join-code" class="field-input" placeholder="EX: YES-XXXX">
           </div>
           <div class="field-group">
             <label class="field-label">Ton prénom</label>
@@ -290,7 +303,6 @@
       </div>
 
       <div class="scroll-zone home-scroll">
-        <!-- CARTE INFOS ASSOCIATION -->
         <div class="asso-header">
           <div>
             <div class="asso-title" id="home-asso-title">Mon Association</div>
@@ -302,7 +314,6 @@
           </div>
         </div>
 
-        <!-- GRILLE DES MODULES -->
         <div class="section-title">Modules</div>
         <div class="modules-grid">
           <div class="module-btn" onclick="showScreen('agenda')">
@@ -327,7 +338,6 @@
           </div>
         </div>
 
-        <!-- SECTION PROCHAINS ÉVÉNEMENTS -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <div class="section-title" style="margin: 0;">Prochains événements</div>
           <button class="add-btn" onclick="openEventModal()">+</button>
@@ -356,7 +366,21 @@
     </div>
 
 
-    <!-- 4. ÉCRAN MEMBRES -->
+    <!-- 4. ÉCRAN BOÎTE À IDÉES -->
+    <div id="screen-ideas" class="screen">
+      <div class="topbar">
+        <button class="back-btn" onclick="showScreen('home')">←</button>
+        <h1>Boîte à idées</h1>
+        <button class="add-btn" onclick="openIdeaModal()">+</button>
+      </div>
+      <div class="scroll-zone" style="padding-top: 10px;" id="ideas-list-container"></div>
+      <div class="ad-banner">
+        <span class="ad-badge">PUB</span> Publicité discrète — jamais intrusive
+      </div>
+    </div>
+
+
+    <!-- 5. ÉCRAN MEMBRES -->
     <div id="screen-account" class="screen">
       <div class="topbar">
         <button class="back-btn" onclick="showScreen('home')">←</button>
@@ -371,7 +395,6 @@
 
 
     <!-- ÉCRANS PLACEHOLDERS -->
-    <div id="screen-ideas" class="screen"><div class="topbar"><button class="back-btn" onclick="showScreen('home')">←</button><h1>Boîte à idées</h1></div><div class="scroll-zone"><p style="color:var(--muted);text-align:center;padding:40px;">Bientôt disponible...</p></div><div class="ad-banner"><span class="ad-badge">PUB</span> Publicité discrète</div></div>
     <div id="screen-reports" class="screen"><div class="topbar"><button class="back-btn" onclick="showScreen('home')">←</button><h1>Trésorerie</h1></div><div class="scroll-zone"><p style="color:var(--muted);text-align:center;padding:40px;">Bientôt disponible...</p></div><div class="ad-banner"><span class="ad-badge">PUB</span> Publicité discrète</div></div>
     <div id="screen-admin" class="screen"><div class="topbar"><button class="back-btn" onclick="showScreen('home')">←</button><h1>Administration</h1></div><div class="scroll-zone"><p style="color:var(--muted);text-align:center;padding:40px;">Espace réservé au président.</p></div><div class="ad-banner"><span class="ad-badge">PUB</span> Publicité discrète</div></div>
 
@@ -396,6 +419,30 @@
           <input type="datetime-local" id="event-date-input" class="field-input">
         </div>
         <button class="btn-action" onclick="submitEvent()">Ajouter à l'agenda →</button>
+      </div>
+    </div>
+
+
+    <!-- MODALE AJOUT IDÉE -->
+    <div class="modal-overlay" id="modal-idea">
+      <div class="modal-content">
+        <div class="modal-title">
+          <span>Proposer une idée 💡</span>
+          <button class="modal-close" onclick="closeIdeaModal()">×</button>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Votre idée / texte</label>
+          <textarea id="idea-text-input" class="field-textarea" placeholder="Décrivez votre idée..."></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Photo (optionnelle)</label>
+          <input type="file" id="idea-img-input" accept="image/*" class="field-input" style="padding: 10px;">
+        </div>
+        <div class="field-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+          <input type="checkbox" id="idea-anonymous-checkbox" style="width: 18px; height: 18px; accent-color: var(--blue);">
+          <label for="idea-anonymous-checkbox" class="field-label" style="margin: 0; cursor: pointer;">Publier de manière anonyme</label>
+        </div>
+        <button class="btn-action" onclick="submitIdea()">Publier l'idée →</button>
       </div>
     </div>
 
@@ -433,21 +480,15 @@
     let currentInviteCode = null;
 
     function switchWelcomeTab(type) {
-      // 1. On cache les 3 gros boutons d'accueil
       document.getElementById('welcome-tabs-container').style.display = 'none';
-      
-      // 2. On affiche le conteneur global des formulaires
-      const formContainer = document.getElementById('welcome-form-container');
-      formContainer.style.display = 'block';
+      document.getElementById('welcome-form-container').style.display = 'block';
 
-      // 3. On affiche SEULEMENT le formulaire demandé, et on s'assure de cacher les deux autres
       document.getElementById('form-login').style.display = (type === 'login') ? 'block' : 'none';
       document.getElementById('form-join').style.display = (type === 'join') ? 'block' : 'none';
       document.getElementById('form-create').style.display = (type === 'create') ? 'block' : 'none';
     }
 
     function backToWelcomeTabs() {
-      // On cache tout le bloc formulaire et on réaffiche les 3 gros boutons
       document.getElementById('welcome-form-container').style.display = 'none';
       document.getElementById('welcome-tabs-container').style.display = 'flex';
     }
@@ -546,7 +587,6 @@
         localStorage.setItem('yesasso_last_asso', currentAssoId);
         setupHomeScreen();
       } catch (e) {
-        console.error("Erreur pour rejoindre :", e);
         showToast('Erreur : ' + e.message);
       }
     }
@@ -584,7 +624,6 @@
         localStorage.setItem('yesasso_last_asso', currentAssoId);
         setupHomeScreen();
       } catch (e) {
-        console.error("Erreur de connexion :", e);
         showToast('Erreur : ' + e.message);
       }
     }
@@ -616,6 +655,7 @@
       loadAssociationInfo();
       loadEvents();
       loadMembers();
+      loadIdeas();
       showScreen('home');
     }
 
@@ -681,7 +721,6 @@
         });
         showToast('Rôle mis à jour');
       } catch (e) {
-        console.error("Erreur mise à jour rôle :", e);
         showToast('Erreur lors du changement de rôle');
       }
     }
@@ -715,14 +754,9 @@
                   month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
                   day = d.getDate();
                   time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                  
-                  if (d < now) {
-                    isPast = true;
-                  }
+                  if (d < now) isPast = true;
                 }
-              } catch (err) {
-                console.warn("Date non parsable pour l'événement :", item.title);
-              }
+              } catch (err) {}
 
               let deleteButtonHtml = '';
               if (canDelete) {
@@ -738,7 +772,7 @@
                   <div class="event-info">
                     <div class="event-title" style="display: flex; align-items: center; gap: 8px;">
                       ${item.title || 'Sans titre'}
-                      ${isPast ? '<span style="font-size: 11px; background: rgba(239,68,68,0.15); color: var(--danger); padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;" title="Cet événement est dépassé">⏰ Passé</span>' : ''}
+                      ${isPast ? '<span style="font-size: 11px; background: rgba(239,68,68,0.15); color: var(--danger); padding: 2px 6px; border-radius: 6px;">⏰ Passé</span>' : ''}
                     </div>
                     <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || 'Lieu non spécifié'}</div>
                   </div>
@@ -752,23 +786,15 @@
         });
     }
 
-    function openEventModal() {
-      const modal = document.getElementById('modal-event');
-      if (modal) modal.classList.add('active');
-    }
-
-    function closeEventModal() {
-      const modal = document.getElementById('modal-event');
-      if (modal) modal.classList.remove('active');
-    }
+    function openEventModal() { document.getElementById('modal-event').classList.add('active'); }
+    function closeEventModal() { document.getElementById('modal-event').classList.remove('active'); }
 
     async function submitEvent() {
       const userRole = currentUserData ? currentUserData.role : '';
       if (!['Président', 'Trésorier', 'Secrétaire'].includes(userRole)) {
-        showToast('Action réservée au bureau (Président, Trésorier, Secrétaire)');
+        showToast('Action réservée au bureau');
         return;
       }
-
       const title = document.getElementById('event-title-input').value.trim();
       const location = document.getElementById('event-location-input').value.trim();
       const dateValue = document.getElementById('event-date-input').value;
@@ -776,14 +802,6 @@
       if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
 
       const localDate = new Date(dateValue);
-      const now = new Date();
-
-      if (localDate < now) {
-        if (!confirm("Attention, la date choisie est déjà passée. Veux-tu vraiment l'ajouter quand même ?")) {
-          return;
-        }
-      }
-
       try {
         await getDb().collection('associations').doc(currentAssoId).collection('events').add({
           title: title,
@@ -791,50 +809,186 @@
           date: firebase.firestore.Timestamp.fromDate(localDate),
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
         closeEventModal();
         document.getElementById('event-title-input').value = '';
         document.getElementById('event-location-input').value = '';
         document.getElementById('event-date-input').value = '';
-        showToast('Événement ajouté avec succès !');
+        showToast('Événement ajouté !');
       } catch (e) {
-        console.error("Erreur ajout événement :", e);
-        showToast('Erreur d\'ajout d\'événement');
+        showToast('Erreur d\'ajout');
       }
     }
 
     async function deleteEvent(eventId, eventTitle) {
       if (!confirm(`Supprimer l'événement "${eventTitle}" ?`)) return;
-
       try {
         await getDb().collection('associations').doc(currentAssoId).collection('events').doc(eventId).delete();
         showToast('Événement supprimé');
       } catch (e) {
-        console.error("Erreur suppression événement :", e);
+        showToast('Erreur lors de la suppression');
+      }
+    }
+
+    // --- LOGIQUE BOÎTE À IDÉES ---
+    function openIdeaModal() { document.getElementById('modal-idea').classList.add('active'); }
+    function closeIdeaModal() { document.getElementById('modal-idea').classList.remove('active'); }
+
+    async function submitIdea() {
+      const text = document.getElementById('idea-text-input').value.trim();
+      const isAnonymous = document.getElementById('idea-anonymous-checkbox').checked;
+      const fileInput = document.getElementById('idea-img-input');
+
+      if (!text) { showToast('Écris une idée !'); return; }
+
+      let imageUrl = '';
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        // Conversion de l'image en Base64 pour stockage direct et simple dans Firestore
+        imageUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      try {
+        await getDb().collection('associations').doc(currentAssoId).collection('ideas').add({
+          text: text,
+          imageUrl: imageUrl,
+          authorName: isAnonymous ? 'Anonyme' : currentUserData.prenom,
+          authorId: isAnonymous ? 'anonymous' : getAuth().currentUser.uid,
+          upvotes: [],
+          downvotes: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        closeIdeaModal();
+        document.getElementById('idea-text-input').value = '';
+        document.getElementById('idea-img-input').value = '';
+        document.getElementById('idea-anonymous-checkbox').checked = false;
+        showToast('Idée publiée !');
+      } catch (e) {
+        showToast('Erreur lors de la publication');
+      }
+    }
+
+    function loadIdeas() {
+      getDb().collection('associations').doc(currentAssoId).collection('ideas')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+          const container = document.getElementById('ideas-list-container');
+          if (!container) return;
+
+          if (snapshot.empty) {
+            container.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:40px;">Aucune idée pour le moment. Propose la première !</div>';
+            return;
+          }
+
+          let html = '';
+          const currentUid = getAuth().currentUser.uid;
+          const isPresident = (currentUserData && currentUserData.role === 'Président');
+
+          snapshot.forEach(doc => {
+            const idea = doc.data();
+            const ideaId = doc.id;
+
+            const upvotes = idea.upvotes || [];
+            const downvotes = idea.downvotes || [];
+            const hasUpvoted = upvotes.includes(currentUid);
+            const hasDownvoted = downvotes.includes(currentUid);
+
+            let deleteBtn = '';
+            if (isPresident) {
+              deleteBtn = `<button class="delete-idea-btn" onclick="deleteIdea('${ideaId}')" title="Supprimer l'idée">🗑️</button>`;
+            }
+
+            html += `
+              <div class="idea-card">
+                <div class="idea-header">
+                  <span>Proposé par : <strong>${idea.authorName || 'Anonyme'}</strong></span>
+                  ${deleteBtn}
+                </div>
+                <div class="idea-text">${idea.text}</div>
+                ${idea.imageUrl ? `<img src="${idea.imageUrl}" class="idea-img">` : ''}
+                <div class="idea-footer">
+                  <div class="vote-group">
+                    <button class="vote-btn ${hasUpvoted ? 'voted-up' : ''}" onclick="voteIdea('${ideaId}', 'up')">
+                      👍 <span>${upvotes.length}</span>
+                    </button>
+                    <button class="vote-btn ${hasDownvoted ? 'voted-down' : ''}" onclick="voteIdea('${ideaId}', 'down')">
+                      👎 <span>${downvotes.length}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          container.innerHTML = html;
+        });
+    }
+
+    async function voteIdea(ideaId, type) {
+      const currentUid = getAuth().currentUser.uid;
+      const ideaRef = getDb().collection('associations').doc(currentAssoId).collection('ideas').doc(ideaId);
+
+      try {
+        await getDb().runTransaction(async (transaction) => {
+          const doc = await transaction.get(ideaRef);
+          if (!doc.exists) return;
+
+          let upvotes = doc.data().upvotes || [];
+          let downvotes = doc.data().downvotes || [];
+
+          if (type === 'up') {
+            if (upvotes.includes(currentUid)) {
+              upvotes = upvotes.filter(id => id !== currentUid); // Annule le vote
+            } else {
+              upvotes.push(currentUid);
+              downvotes = downvotes.filter(id => id !== currentUid); // Retire le pouce rouge si présent
+            }
+          } else if (type === 'down') {
+            if (downvotes.includes(currentUid)) {
+              downvotes = downvotes.filter(id => id !== currentUid); // Annule le vote
+            } else {
+              downvotes.push(currentUid);
+              upvotes = upvotes.filter(id => id !== currentUid); // Retire le pouce vert si présent
+            }
+          }
+
+          transaction.update(ideaRef, { upvotes, downvotes });
+        });
+      } catch (e) {
+        showToast('Erreur lors du vote');
+      }
+    }
+
+    async function deleteIdea(ideaId) {
+      if (!currentUserData || currentUserData.role !== 'Président') {
+        showToast('Action réservée au président');
+        return;
+      }
+      if (!confirm('Voulez-vous vraiment supprimer cette idée ?')) return;
+
+      try {
+        await getDb().collection('associations').doc(currentAssoId).collection('ideas').doc(ideaId).delete();
+        showToast('Idée supprimée');
+      } catch (e) {
         showToast('Erreur lors de la suppression');
       }
     }
 
     async function kickMember(memberUid, memberName) {
-      if (!currentUserData || currentUserData.role !== 'Président') {
-        showToast('Action réservée au président');
-        return;
-      }
-
-      if (!confirm(`Es-tu sûr de vouloir virer ${memberName || 'ce membre'} de l'association ?`)) {
-        return;
-      }
+      if (!currentUserData || currentUserData.role !== 'Président') return;
+      if (!confirm(`Virer ${memberName || 'ce membre'} de l'association ?`)) return;
 
       try {
         await getDb().collection('associations').doc(currentAssoId).collection('members').doc(memberUid).delete();
-        showToast('Membre exclu avec succès');
+        showToast('Membre exclu');
       } catch (e) {
-        console.error("Erreur lors de l'exclusion du membre :", e);
         showToast('Erreur lors de l\'exclusion');
       }
     }
 
-    // --- RESTAURATION DE SESSION SÉCURISÉE ---
     firebase.auth().onAuthStateChanged(async (user) => {
       if (user) {
         const uid = user.uid;
@@ -855,7 +1009,6 @@
           }
           showScreen('auth');
         } catch (e) {
-          console.error("Erreur de restauration :", e);
           showScreen('auth');
         }
       } else {
