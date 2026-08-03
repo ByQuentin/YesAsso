@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0A0E1A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>YesAsso</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0A0E1A;
+      --card: #141929;
+      --card2: #1C2340;
+      --blue: #2563EB;
+      --blue-light: #3B82F6;
+      --green: #10B981;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --border: #2A3050;
+      --danger: #EF4444;
+      --ad-bg: #111827;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      max-height: 880px;
+      background: var(--bg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    @media (min-width: 440px) {
+      .phone {
+        height: 844px;
+        border-radius: 40px;
+        border: 2px solid var(--border);
+        box-shadow: 0 40px 80px rgba(0,0,0,.7);
+      }
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+    .screen.active { display: flex; }
+
+    .topbar {
+      padding: 20px 24px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .topbar h1 { font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
+    .topbar .back-btn {
+      width: 36px; height: 36px;
+      background: var(--card2);
+      border: none; border-radius: 50%;
+      color: var(--text); font-size: 18px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .topbar .back-btn:hover { background: var(--blue); }
+    .avatar {
+      width: 36px; height: 36px;
+      background: var(--blue);
+      border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .scroll-zone {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px;
+      scrollbar-width: none;
+    }
+    .scroll-zone::-webkit-scrollbar { display: none; }
+
+    .ad-banner {
+      background: var(--ad-bg);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      flex-shrink: 0;
+      min-height: 44px;
+    }
+    .ad-badge {
+      background: var(--border);
+      color: var(--muted);
+      font-size: 9px; font-weight: 700;
+      padding: 2px 5px; border-radius: 3px;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+
+    .join-screen {
+      align-items: center;
+      justify-content: center;
+      padding: 40px 28px 20px;
+    }
+    .asso-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--blue) 0%, #1D4ED8 100%);
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(37,99,235,.4);
+    }
+    .join-label {
+      font-size: 12px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 8px;
+      text-align: center;
+    }
+    .join-asso-name {
+      font-size: 26px; font-weight: 800;
+      text-align: center; margin-bottom: 4px;
+      line-height: 1.2;
+    }
+    .join-members {
+      font-size: 14px; color: var(--muted);
+      text-align: center; margin-bottom: 36px;
+    }
+    .join-members span { color: var(--green); font-weight: 600; }
+
+    .field-group { width: 100%; margin-bottom: 16px; }
+    .field-label {
+      font-size: 13px; font-weight: 600;
+      color: var(--muted); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .field-label .req { color: var(--blue-light); font-size: 15px; }
+
+    .field-input {
+      width: 100%;
+      background: var(--card2);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 15px; font-family: inherit;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field-input::placeholder { color: var(--muted); }
+    .field-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.2);
+    }
+
+    .btn-join {
+      width: 100%; margin-top: 8px;
+      background: var(--blue);
+      border: none; border-radius: 14px;
+      padding: 16px;
+      font-size: 17px; font-weight: 700;
+      font-family: inherit; color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 6px 20px rgba(37,99,235,.4);
+    }
+    .btn-join:hover { background: var(--blue-light); transform: translateY(-1px); }
+
+    .home-scroll { padding: 0 20px 16px; }
+    .asso-header {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--card);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .asso-title { font-size: 17px; font-weight: 700; }
+    .asso-sub { font-size: 13px; color: var(--muted); }
+
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(16,185,129,.15);
+      border: 1px solid rgba(16,185,129,.3);
+      color: var(--green);
+      font-size: 12px; font-weight: 700;
+      padding: 4px 10px; border-radius: 8px;
+      width: fit-content;
+    }
+    .role-badge::before { content: '●'; font-size: 8px; }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .module-btn {
+      background: var(--card2);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 22px 16px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+      cursor: pointer;
+      transition: background .15s, border-color .2s, transform .1s;
+      text-decoration: none; color: var(--text);
+    }
+    .module-btn:hover { background: #232B4A; border-color: var(--blue); }
+
+    .module-icon {
+      width: 50px; height: 50px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .module-icon.agenda   { background: rgba(37,99,235,.2); }
+    .module-icon.ideas    { background: rgba(245,158,11,.2); }
+    .module-icon.reports  { background: rgba(139,92,246,.2); }
+    .module-icon.account  { background: rgba(16,185,129,.2); }
+    .module-label { font-size: 14px; font-weight: 700; text-align: center; }
+
+    .next-event {
+      background: linear-gradient(135deg, var(--blue) 0%, #1D4ED8 100%);
+      border-radius: 18px;
+      padding: 16px 18px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(37,99,235,.3);
+      margin-bottom: 4px;
+    }
+    .next-event-label { font-size: 11px; font-weight: 700; opacity: .7; text-transform: uppercase; margin-bottom: 6px; }
+    .next-event-title { font-size: 18px; font-weight: 800; }
+    .next-event-sub { font-size: 13px; opacity: .8; margin-top: 3px; }
+
+    .agenda-scroll { padding: 0 20px 16px; }
+    .event-item {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .event-date { text-align: center; min-width: 44px; }
+    .event-month { font-size: 11px; font-weight: 700; color: var(--blue-light); text-transform: uppercase; }
+    .event-day { font-size: 28px; font-weight: 800; line-height: 1; }
+    .event-info { flex: 1; }
+    .event-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .event-meta { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .event-dot { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; }
+    .event-chevron { color: var(--muted); font-size: 14px; }
+
+    .add-btn {
+      width: 36px; height: 36px;
+      background: var(--blue);
+      border: none; border-radius: 50%;
+      color: #fff; font-size: 22px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    .section-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .8px; margin: 0 0 12px;
+    }
+
+    .toast {
+      position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #1E293B; border: 1px solid var(--border);
+      color: var(--text); padding: 12px 20px;
+      border-radius: 14px; font-size: 14px; font-weight: 600;
+      opacity: 0; transition: all .3s; pointer-events: none;
+      white-space: nowrap; z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- SCREEN 1 : REJOINDRE -->
+  <div class="screen join-screen active" id="screen-join">
+    <div class="asso-icon">👥</div>
+    <div class="join-label">Rejoindre une association</div>
+    <div class="join-asso-name" id="asso-display-name">Association...</div>
+    <div class="join-members"><span id="asso-display-count">0</span> membres déjà inscrits</div>
+
+    <div class="field-group">
+      <div class="field-label"><span class="req">✦</span> Ton prénom</div>
+      <input class="field-input" type="text" placeholder="Marie" id="input-prenom">
+    </div>
+
+    <div class="field-group">
+      <div class="field-label"><span class="req">✦</span> Mot de passe</div>
+      <input class="field-input" type="password" placeholder="••••••••" id="input-mdp">
+    </div>
+
+    <button class="btn-join" onclick="handleJoin()">Rejoindre →</button>
+
+    <div style="height: 20px;"></div>
+    <div class="ad-banner">
+      <span class="ad-badge">Pub</span>
+      Publicité discrète — jamais intrusive
+    </div>
+  </div>
+
+  <!-- SCREEN 2 : ACCUEIL -->
+  <div class="screen" id="screen-home">
+    <div class="topbar">
+      <div>
+        <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:2px;">Accueil</div>
+        <div style="font-size:18px;font-weight:800;">YesAsso</div>
+      </div>
+      <div class="avatar" id="avatar-initials">--</div>
+    </div>
+
+    <div class="scroll-zone">
+      <div class="home-scroll">
+        <div class="asso-header">
+          <div>
+            <div class="asso-title" id="home-asso-title">Chargement...</div>
+            <div class="asso-sub" id="home-asso-sub">...</div>
+          </div>
+          <div class="role-badge" id="role-display">Membre</div>
+        </div>
+
+        <p class="section-title">Modules</p>
+
+        <div class="modules-grid">
+          <button class="module-btn" onclick="showScreen('agenda')">
+            <div class="module-icon agenda">📅</div>
+            <div class="module-label">Agenda</div>
+          </button>
+          <button class="module-btn" onclick="showToast('Boîte à idées — bientôt disponible !')">
+            <div class="module-icon ideas">💡</div>
+            <div class="module-label">Boîte à idées</div>
+          </button>
+          <button class="module-btn" onclick="showToast('Comptes-rendus — bientôt disponible !')">
+            <div class="module-icon reports">📄</div>
+            <div class="module-label">Comptes-rendus</div>
+          </button>
+          <button class="module-btn" onclick="showToast('Compte bancaire — bientôt disponible !')">
+            <div class="module-icon account">💶</div>
+            <div class="module-label">Compte</div>
+          </button>
+        </div>
+
+        <div class="next-event" onclick="showScreen('agenda')" id="next-event-card">
+          <div class="next-event-label">⚡ Prochain événement</div>
+          <div class="next-event-title" id="next-event-title">Aucun événement</div>
+          <div class="next-event-sub" id="next-event-sub">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad-banner">
+      <span class="ad-badge">Pub</span>
+      Supprimer les publicités — Achat unique 2,99 €
+    </div>
+  </div>
+
+  <!-- SCREEN 3 : AGENDA -->
+  <div class="screen" id="screen-agenda">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('home')">‹</button>
+      <h1>Agenda</h1>
+      <button class="add-btn" onclick="handleAddEvent()">+</button>
+    </div>
+
+    <div class="scroll-zone">
+      <div class="agenda-scroll">
+        <p class="section-title">À venir</p>
+        <div id="events-list"></div>
+      </div>
+    </div>
+
+    <div class="ad-banner">
+      <span class="ad-badge">Pub</span>
+      Supprimer les publicités — Achat unique 2,99 €
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  // Remplacez avec vos clés de configuration Firebase
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentAssoId = "demo-asso";
+  let currentUserData = null;
+
+  // Enregistrement Service Worker PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  async function handleJoin() {
+    const prenom = document.getElementById('input-prenom').value.trim();
+    const mdp = document.getElementById('input-mdp').value.trim();
+
+    if (!prenom || !mdp) {
+      showToast('Remplis le prénom et mot de passe');
+      return;
+    }
+
+    const email = `${prenom.toLowerCase().replace(/\s+/g, '')}@yesasso.local`;
+
+    try {
+      let userCred;
+      try {
+        userCred = await auth.signInWithEmailAndPassword(email, mdp);
+      } catch (e) {
+        userCred = await auth.createUserWithEmailAndPassword(email, mdp);
+      }
+
+      const uid = userCred.user.uid;
+      const initials = prenom.substring(0, 2).toUpperCase();
+
+      currentUserData = { prenom, role: 'Membre' };
+
+      await db.collection('associations').doc(currentAssoId).collection('members').doc(uid).set({
+        prenom: prenom,
+        role: 'Membre',
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      document.getElementById('avatar-initials').textContent = initials;
+      document.getElementById('role-display').textContent = currentUserData.role;
+
+      loadAssociationData();
+      loadEvents();
+      showScreen('home');
+    } catch (err) {
+      showToast('Erreur d\'accès: ' + err.message);
+    }
+  }
+
+  function loadAssociationData() {
+    db.collection('associations').doc(currentAssoId).onSnapshot(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        document.getElementById('asso-display-name').textContent = data.name || 'Association';
+        document.getElementById('asso-display-count').textContent = data.memberCount || 1;
+        document.getElementById('home-asso-title').textContent = data.name || 'Association';
+        document.getElementById('home-asso-sub').textContent = `${data.memberCount || 1} membres · ${data.subtitle || ''}`;
+      }
+    });
+  }
+
+  function loadEvents() {
+    db.collection('associations').doc(currentAssoId).collection('events')
+      .orderBy('date', 'asc')
+      .onSnapshot(snapshot => {
+        const list = document.getElementById('events-list');
+        list.innerHTML = '';
+
+        if (snapshot.empty) {
+          list.innerHTML = '<div style="color:var(--muted);font-size:14px;">Aucun événement à venir</div>';
+          document.getElementById('next-event-title').textContent = 'Aucun événement';
+          document.getElementById('next-event-sub').textContent = '--';
+          return;
+        }
+
+        let first = true;
+        snapshot.forEach(doc => {
+          const item = doc.data();
+          const d = item.date ? item.date.toDate() : new Date();
+          const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
+          const day = d.getDate();
+          const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
+
+          if (first) {
+            document.getElementById('next-event-title').textContent = item.title;
+            document.getElementById('next-event-sub').textContent = `${day} ${month} · ${time} · ${item.location || ''}`;
+            first = false;
+          }
+
+          list.innerHTML += `
+            <div class="event-item">
+              <div class="event-date">
+                <div class="event-month">${month}</div>
+                <div class="event-day">${day}</div>
+              </div>
+              <div class="event-info">
+                <div class="event-title">${item.title}</div>
+                <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
+              </div>
+              <div class="event-chevron">›</div>
+            </div>
+          `;
+        });
+      });
+  }
+
+  async function handleAddEvent() {
+    if (!auth.currentUser) return;
+    const title = prompt("Titre de l'événement :");
+    if (!title) return;
+    const location = prompt("Lieu :", "Salle des fêtes");
+
+    await db.collection('associations').doc(currentAssoId).collection('events').add({
+      title: title,
+      location: location || '',
+      date: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 86400000 * 7))
+    });
+
+    showToast('Événement ajouté !');
+  }
+</script>
+</body>
+</html>
