@@ -7,14 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>YesAsso</title>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      caches.keys().then(function(names) {
-        for (let name of names) caches.delete(name);
-      });
-    }
-  </script>
   
   <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -178,7 +170,15 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-</script>
+
+  <script>
+    // Force la suppression des anciens caches Service Worker lors du chargement
+    if ('serviceWorker' in navigator) {
+      caches.keys().then(function(names) {
+        for (let name of names) caches.delete(name);
+      });
+    }
+  </script>
 </head>
 <body>
 
@@ -232,11 +232,11 @@
     <div id="form-create" style="width:100%; display:none;">
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Nom de l'association</div>
-        <input class="field-input" type="text" placeholder="Club de Football Gannat" id="create-asso-name">
+        <input class="field-input" type="text" placeholder="Nom de l'association" id="create-asso-name">
       </div>
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Ton prénom (Président)</div>
-        <input class="field-input" type="text" placeholder="Alexandre" id="create-prenom">
+        <input class="field-input" type="text" placeholder="Ton prénom" id="create-prenom">
       </div>
       <div class="field-group">
         <div class="field-label"><span class="req">✦</span> Adresse e-mail</div>
@@ -359,7 +359,7 @@
 </div>
 
 <script>
-  // Initialisation de Firebase
+  // 1. INITIALISATION DE FIREBASE (Déclaré en premier !)
   const firebaseConfig = {
     authDomain: "yesasso-b23c2.firebaseapp.com",
     projectId: "yesasso-b23c2",
@@ -372,10 +372,12 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+  // 2. VARIABLES GLOBALES
   let currentAssoId = null;
   let currentUserData = null;
   let currentInviteCode = null;
 
+  // 3. FONCTIONS UTILITAIRES DE L'INTERFACE
   function switchTab(type) {
     document.getElementById('tab-login').classList.toggle('active', type === 'login');
     document.getElementById('tab-join').classList.toggle('active', type === 'join');
@@ -404,7 +406,7 @@
     return 'YES-' + Math.random().toString(36).substring(2, 6).toUpperCase();
   }
 
-  // 1. SE CONNECTER A UN COMPTE EXISTANT
+  // 4. ACTION : SE CONNECTER A UN COMPTE EXISTANT
   async function handleLogin() {
     const email = document.getElementById('login-email').value.trim();
     const mdp = document.getElementById('login-mdp').value.trim();
@@ -415,7 +417,6 @@
       const userCred = await auth.signInWithEmailAndPassword(email, mdp);
       const uid = userCred.user.uid;
 
-      // Chercher à quelle association appartient cet utilisateur
       const snapshot = await db.collectionGroup('members').get();
       let foundAsso = null;
       let foundMemberData = null;
@@ -443,7 +444,7 @@
     }
   }
 
-  // 2. CRÉER UNE ASSO ET DEVENIR PRÉSIDENT
+  // 5. ACTION : CRÉER UNE ASSO ET DEVENIR PRÉSIDENT
   async function handleCreateAsso() {
     const assoName = document.getElementById('create-asso-name').value.trim();
     const prenom = document.getElementById('create-prenom').value.trim();
@@ -480,7 +481,7 @@
     }
   }
 
-  // 3. REJOINDRE AVEC UN CODE D'INVITATION
+  // 6. ACTION : REJOINDRE AVEC UN CODE D'INVITATION
   async function handleJoin() {
     const code = document.getElementById('join-code').value.trim().toUpperCase();
     const prenom = document.getElementById('join-prenom').value.trim();
@@ -514,6 +515,7 @@
     }
   }
 
+  // 7. CHARGEMENT DE L'ÉCRAN PRINCIPAL
   function setupHomeScreen() {
     document.getElementById('avatar-initials').textContent = currentUserData.prenom.substring(0, 2).toUpperCase();
     document.getElementById('role-display').textContent = currentUserData.role;
