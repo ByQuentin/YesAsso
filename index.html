@@ -680,6 +680,38 @@
         showToast('Erreur lors de la déconnexion');
       }
     }
+    // Observer Firebase pour garder la session active au rechargement (F5)
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        // L'utilisateur est connecté, on récupère ses données d'association
+        const uid = user.uid;
+        try {
+          const snapshot = await getDb().collectionGroup('members').get();
+          let foundAsso = null, foundMemberData = null;
+
+          snapshot.forEach(doc => {
+            if (doc.id === uid) {
+              foundMemberData = doc.data();
+              foundAsso = doc.ref.parent.parent;
+            }
+          });
+
+          if (foundAsso) {
+            currentAssoId = foundAsso.id;
+            const assoDoc = await foundAsso.get();
+            currentInviteCode = assoDoc.data().inviteCode;
+            currentUserData = foundMemberData;
+
+            setupHomeScreen();
+          }
+        } catch (e) {
+          console.error("Erreur de restauration de session :", e);
+        }
+      } else {
+        // Aucun utilisateur connecté, on affiche l'écran d'auth
+        showScreen('auth');
+      }
+    });
   </script>
 </body>
 </html>
