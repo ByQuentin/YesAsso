@@ -479,39 +479,49 @@
       }
     }
 
-    async function handleJoin() {
-      const code = document.getElementById('join-code').value.trim().toUpperCase();
-      const prenom = document.getElementById('join-prenom').value.trim();
-      const email = document.getElementById('join-email').value.trim();
-      const mdp = document.getElementById('join-mdp').value.trim();
+async function handleJoin() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  const prenom = document.getElementById('join-prenom').value.trim();
+  const email = document.getElementById('join-email').value.trim();
+  const mdp = document.getElementById('join-mdp').value.trim();
 
-      if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
+  if (!code || !prenom || !email || !mdp) { showToast('Remplis tous les champs'); return; }
 
-      try {
-        const snapshot = await getDb().collection('associations').where('inviteCode', '==', code).get();
-        if (snapshot.empty) { showToast('Code d\'association invalide'); return; }
+  try {
+    // 1. On crée le compte utilisateur EN PREMIER pour être authentifié auprès de Firebase
+    const userCred = await getAuth().createUserWithEmailAndPassword(email, mdp);
+    const uid = userCred.user.uid;
 
-        const assoDoc = snapshot.docs[0];
-        currentAssoId = assoDoc.id;
-        currentInviteCode = code;
-
-        const userCred = await getAuth().createUserWithEmailAndPassword(email, mdp);
-        const uid = userCred.user.uid;
-
-        await assoDoc.ref.collection('members').doc(uid).set({
-          prenom: prenom,
-          email: email,
-          role: 'Membre',
-          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        currentUserData = { prenom, role: 'Membre' };
-        localStorage.setItem('yesasso_last_asso', currentAssoId);
-        setupHomeScreen();
-      } catch (e) {
-        showToast('Erreur : ' + e.message);
-      }
+    // 2. Maintenant qu'on est identifié, on peut interroger la base de données
+    const snapshot = await getDb().collection('associations').where('inviteCode', '==', code).get();
+    
+    if (snapshot.empty) { 
+      // Si le code est invalide, on supprime le compte fraîchement créé pour ne pas polluer ton Firebase
+      await userCred.user.delete();
+      showToast('Code d\'association invalide'); 
+      return; 
     }
+
+    const assoDoc = snapshot.docs[0];
+    currentAssoId = assoDoc.id;
+    currentInviteCode = code;
+
+    // 3. On ajoute l'utilisateur dans la sous-collection "members" de l'asso
+    await assoDoc.ref.collection('members').doc(uid).set({
+      prenom: prenom,
+      email: email,
+      role: 'Membre',
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    currentUserData = { prenom, role: 'Membre' };
+    localStorage.setItem('yesasso_last_asso', currentAssoId);
+    setupHomeScreen();
+  } catch (e) {
+    console.error("Erreur pour rejoindre :", e);
+    showToast('Erreur : ' + e.message);
+  }
+}
 
     async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
@@ -641,7 +651,7 @@
       }
     }
 
-    function loadEvents() {
+function loadEvents() {
       getDb().collection('associations').doc(currentAssoId).collection('events')
         .orderBy('date', 'asc')
         .onSnapshot(snapshot => {
@@ -652,12 +662,15 @@
           if (snapshot.empty) {
             htmlContent = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Aucun événement prévu</div>';
           } else {
+            const now = new Date(); // Date et heure actuelles
+
             snapshot.forEach(doc => {
               const item = doc.data();
               const eventId = doc.id;
               let month = 'PRO';
               let day = '--';
               let time = 'Heure non spécifiée';
+              let isPast = false;
 
               try {
                 if (item.date && typeof item.date.toDate === 'function') {
@@ -665,19 +678,28 @@
                   month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
                   day = d.getDate();
                   time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                  
+                  // On vérifie si l'événement est dépassé
+                  if (d < now) {
+                    isPast = true;
+                  }
                 }
               } catch (err) {
                 console.warn("Date non parsable pour l'événement :", item.title);
               }
 
+              // Style visuel différent si l'événement est passé (opacité réduite + badge horloge)
               htmlContent += `
-                <div class="event-item">
+                <div class="event-item" style="${isPast ? 'opacity: 0.6; border-color: rgba(239,68,68,0.3);' : ''}">
                   <div class="event-date">
                     <div class="event-month">${month}</div>
                     <div class="event-day">${day}</div>
                   </div>
                   <div class="event-info">
-                    <div class="event-title">${item.title || 'Sans titre'}</div>
+                    <div class="event-title" style="display: flex; align-items: center; gap: 8px;">
+                      ${item.title || 'Sans titre'}
+                      ${isPast ? '<span style="font-size: 11px; background: rgba(239,68,68,0.15); color: var(--danger); padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;" title="Cet événement est dépassé">⏰ Passé</span>' : ''}
+                    </div>
                     <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || 'Lieu non spécifié'}</div>
                   </div>
                   <button class="delete-event-btn" onclick="deleteEvent('${eventId}', '${item.title || 'cet événement'}')" title="Supprimer">🗑️</button>
@@ -689,7 +711,6 @@
           if (agendaList) agendaList.innerHTML = htmlContent;
         });
     }
-
     function openEventModal() {
       const modal = document.getElementById('modal-event');
       if (modal) modal.classList.add('active');
@@ -700,34 +721,41 @@
       if (modal) modal.classList.remove('active');
     }
 
-    async function submitEvent() {
-      const title = document.getElementById('event-title-input').value.trim();
-      const location = document.getElementById('event-location-input').value.trim();
-      const dateValue = document.getElementById('event-date-input').value;
+async function submitEvent() {
+  const title = document.getElementById('event-title-input').value.trim();
+  const location = document.getElementById('event-location-input').value.trim();
+  const dateValue = document.getElementById('event-date-input').value;
 
-      if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
+  if (!title || !dateValue) { showToast('Titre et date obligatoires'); return; }
 
-      try {
-        const localDate = new Date(dateValue);
+  const localDate = new Date(dateValue);
+  const now = new Date();
 
-        await getDb().collection('associations').doc(currentAssoId).collection('events').add({
-          title: title,
-          location: location || 'Non spécifié',
-          date: firebase.firestore.Timestamp.fromDate(localDate),
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        closeEventModal();
-        document.getElementById('event-title-input').value = '';
-        document.getElementById('event-location-input').value = '';
-        document.getElementById('event-date-input').value = '';
-        showToast('Événement ajouté avec succès !');
-      } catch (e) {
-        console.error("Erreur ajout événement :", e);
-        showToast('Erreur d\'ajout d\'événement');
-      }
+  // Avertissement ou blocage si la date est passée
+  if (localDate < now) {
+    if (!confirm("Attention, la date choisie est déjà passée. Veux-tu vraiment l'ajouter quand même ?")) {
+      return; // L'utilisateur annule
     }
+  }
 
+  try {
+    await getDb().collection('associations').doc(currentAssoId).collection('events').add({
+      title: title,
+      location: location || 'Non spécifié',
+      date: firebase.firestore.Timestamp.fromDate(localDate),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    closeEventModal();
+    document.getElementById('event-title-input').value = '';
+    document.getElementById('event-location-input').value = '';
+    document.getElementById('event-date-input').value = '';
+    showToast('Événement ajouté avec succès !');
+  } catch (e) {
+    console.error("Erreur ajout événement :", e);
+    showToast('Erreur d\'ajout d\'événement');
+  }
+}
     async function deleteEvent(eventId, eventTitle) {
       if (!confirm(`Supprimer l'événement "${eventTitle}" ?`)) return;
 
