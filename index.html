@@ -647,34 +647,33 @@
           } else {
             snapshot.forEach(doc => {
               const item = doc.data();
+              let month = 'PRO';
+              let day = '--';
+              let time = 'Heure non spécifiée';
+
               try {
-                let d;
                 if (item.date && typeof item.date.toDate === 'function') {
-                  d = item.date.toDate();
-                } else {
-                  d = new Date(item.date);
+                  const d = item.date.toDate();
+                  month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
+                  day = d.getDate();
+                  time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
                 }
-                if (isNaN(d)) throw new Error("Date invalide");
-
-                const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
-                const day = d.getDate();
-                const time = d.toLocaleTimeString('fr-FR', { hour: '2digit', minute: '2digit' });
-
-                htmlContent += `
-                  <div class="event-item">
-                    <div class="event-date">
-                      <div class="event-month">${month}</div>
-                      <div class="event-day">${day}</div>
-                    </div>
-                    <div class="event-info">
-                      <div class="event-title">${item.title}</div>
-                      <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || ''}</div>
-                    </div>
-                  </div>
-                `;
               } catch (err) {
-                console.warn("Événement ignoré (date invalide) :", item);
+                console.warn("Date non parsable pour l'événement :", item.title);
               }
+
+              htmlContent += `
+                <div class="event-item">
+                  <div class="event-date">
+                    <div class="event-month">${month}</div>
+                    <div class="event-day">${day}</div>
+                  </div>
+                  <div class="event-info">
+                    <div class="event-title">${item.title || 'Sans titre'}</div>
+                    <div class="event-meta">${time} <span class="event-dot"></span> ${item.location || 'Lieu non spécifié'}</div>
+                  </div>
+                </div>
+              `;
             });
           }
           if (list) list.innerHTML = htmlContent;
@@ -739,7 +738,7 @@
       }
     }
 
-    // --- RESTAURATION DE SESSION SÉCURISÉE SANS COLLECTION GROUP ---
+    // --- RESTAURATION DE SESSION SÉCURISÉE ---
     firebase.auth().onAuthStateChanged(async (user) => {
       if (user) {
         const uid = user.uid;
