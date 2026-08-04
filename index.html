@@ -245,7 +245,7 @@
           <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Rejoindre l'asso</h2>
           <div class="field-group">
             <label class="field-label">Code d'invitation</label>
-            <input type="text" id="join-code" class="field-input" placeholder="EX: XXX-XXXX">
+            <input type="text" id="join-code" class="field-input" placeholder="EX: YES-XXXX">
           </div>
           <div class="field-group">
             <label class="field-label">Ton prénom</label>
@@ -340,7 +340,7 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <div class="section-title" style="margin: 0;">Prochains événements</div>
-          <button class="add-btn" onclick="openEventModal()">+</button>
+          <button class="add-btn" id="btn-add-event-home" onclick="openEventModal()">+</button>
         </div>
         
         <div id="events-list"></div>
@@ -357,7 +357,7 @@
       <div class="topbar">
         <button class="back-btn" onclick="showScreen('home')">←</button>
         <h1>Agenda</h1>
-        <button class="add-btn" onclick="openEventModal()">+</button>
+        <button class="add-btn" id="btn-add-event-agenda" onclick="openEventModal()">+</button>
       </div>
       <div class="scroll-zone" style="padding-top: 10px;" id="agenda-full-list"></div>
       <div class="ad-banner">
@@ -656,9 +656,11 @@
       const userRole = currentUserData ? currentUserData.role : '';
       const canManageEvents = ['Président', 'Trésorier', 'Secrétaire'].includes(userRole);
       
-      document.querySelectorAll('.add-btn').forEach(btn => {
-        btn.style.display = canManageEvents ? 'flex' : 'none';
-      });
+      // Gestion de l'affichage du bouton d'ajout d'événement (réservé au bureau)
+      const btnAddEventHome = document.getElementById('btn-add-event-home');
+      const btnAddEventAgenda = document.getElementById('btn-add-event-agenda');
+      if (btnAddEventHome) btnAddEventHome.style.display = canManageEvents ? 'flex' : 'none';
+      if (btnAddEventAgenda) btnAddEventAgenda.style.display = canManageEvents ? 'flex' : 'none';
 
       loadAssociationInfo();
       loadEvents();
@@ -912,6 +914,7 @@
             const hasDownvoted = downvotes.includes(currentUid);
 
             let deleteBtn = '';
+            // Seul le président peut supprimer une idée
             if (isPresident) {
               deleteBtn = `<button class="delete-idea-btn" onclick="deleteIdea('${idea.id}')" title="Supprimer l'idée">🗑️</button>`;
             }
