@@ -917,11 +917,18 @@
       let imageUrl = '';
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        imageUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.readAsDataURL(file);
-        });
+        // Vérif taille brute avant compression (max 15 Mo)
+        if (file.size > 15 * 1024 * 1024) {
+          showToast('Image trop lourde (max 15 Mo)');
+          return;
+        }
+        showToast('Compression en cours...');
+        try {
+          imageUrl = await compressImage(file, 900, 0.75);
+        } catch (e) {
+          showToast('Erreur de compression');
+          return;
+        }
       }
 
       try {
@@ -939,10 +946,50 @@
         document.getElementById('idea-text-input').value = '';
         document.getElementById('idea-img-input').value = '';
         document.getElementById('idea-anonymous-checkbox').checked = false;
-        showToast('Idée publiée !');
+        showToast('Idée publiée ! 🎉');
       } catch (e) {
         showToast('Erreur lors de la publication');
       }
+    }
+
+    /**
+     * Compresse une image via Canvas.
+     * @param {File} file - fichier image source
+     * @param {number} maxSize - largeur/hauteur max en px (ex: 900)
+     * @param {number} quality - qualité JPEG entre 0 et 1 (ex: 0.75)
+     * @returns {Promise<string>} - base64 compressée
+     */
+    function compressImage(file, maxSize, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = () => {
+            let w = img.width;
+            let h = img.height;
+
+            // Redimensionner si plus grand que maxSize
+            if (w > maxSize || h > maxSize) {
+              if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+              else       { w = Math.round(w * maxSize / h); h = maxSize; }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width  = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            // Sortie JPEG compressée
+            const compressed = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressed);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
     function loadIdeas() {
