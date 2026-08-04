@@ -1015,7 +1015,7 @@
           });
 
           let html = '';
-          const currentUid = getAuth().currentUser.uid;
+          const currentUid = user.uid;
           const isPresident = (currentUserData && currentUserData.role === 'Président');
 
           ideasArray.forEach(idea => {
@@ -1056,7 +1056,10 @@
     }
 
     async function voteIdea(ideaId, type) {
-      const currentUid = getAuth().currentUser.uid;
+      const user = getAuth().currentUser;
+      if (!user) { showToast('Non connecté'); return; }
+      if (!currentAssoId) { showToast('Association introuvable'); return; }
+      const currentUid = user.uid;
       const ideaRef = getDb().collection('associations').doc(currentAssoId).collection('ideas').doc(ideaId);
 
       try {
@@ -1086,7 +1089,8 @@
           transaction.update(ideaRef, { upvotes, downvotes });
         });
       } catch (e) {
-        showToast('Erreur lors du vote');
+        console.error('Erreur vote:', e);
+        showToast('Erreur vote : ' + (e.code || e.message));
       }
     }
 
